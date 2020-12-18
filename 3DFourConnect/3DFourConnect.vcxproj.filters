@@ -13,5 +13,42 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Source Files\Graphics Tools">
+      <UniqueIdentifier>{b08c7eb8-beb6-4659-b360-742d6f4ae0ff}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\OpenGl Components">
+      <UniqueIdentifier>{cc8a033f-0ada-44b5-a47e-5a1d295154c2}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="GraphicsEngine.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Camera.h">
+      <Filter>Source Files\Graphics Tools</Filter>
+    </ClInclude>
+    <ClInclude Include="Quad.h">
+      <Filter>Source Files\Graphics Tools</Filter>
+    </ClInclude>
+    <ClInclude Include="Skybox.h">
+      <Filter>Source Files\Graphics Tools</Filter>
+    </ClInclude>
+    <ClInclude Include="Asset.h">
+      <Filter>Source Files\Graphics Tools</Filter>
+    </ClInclude>
+    <ClInclude Include="Model.h">
+      <Filter>Source Files\Graphics Tools</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\LibResources\include\img\ImageLoader.cpp">
+      <Filter>Source Files\OpenGl Components</Filter>
+    </ClCompile>
+    <ClCompile Include="glad.c">
+      <Filter>Source Files\OpenGl Components</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
