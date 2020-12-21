@@ -23,6 +23,7 @@
 
 //written class refrences
 #include "GraphicsEngine.h"
+#include "Text.h"
 
 // settings
 const unsigned int SCR_WIDTH = 1600;
@@ -31,7 +32,16 @@ const unsigned int SCR_HEIGHT = 900;
 const double fps = 60;
 
 int main() {
-	GraphicsEngine graphics("3D Four Connect", &SCR_WIDTH, &SCR_HEIGHT, true);
+	GraphicsEngine graphics("3D Four Connect", &SCR_WIDTH, &SCR_HEIGHT, false);
+
+	//add text
+	graphics.textManager.addText("This is sample text", 25.0f, 25.0f, 1.0f, glm::vec3(0.5, 0.8f, 0.2f));
+
+	//add models to the scene
+	graphics.addModel("C:\\Users\\Erik\\source\\repos\\3DFourConnect\\3DFourConnect\\resources\\objects\\3dfourconnect\\3dFourConnect.obj");
+	graphics.addModel("C:\\Users\\Erik\\source\\repos\\3DFourConnect\\3DFourConnect\\resources\\objects\\testing\\backpack\\backpack.obj");
+
+	graphics.getModel(0).setPosition(glm::vec3(20, -10, 0));
 
 	int fpsCount = 0;
 	int fpsCounter = 0;
@@ -42,6 +52,7 @@ int main() {
 		std::chrono::system_clock::time_point now = std::chrono::system_clock::now();
 
 		//input
+
 
 		//update game world info
 

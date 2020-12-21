@@ -18,6 +18,9 @@
 
 //graphics tools
 #include "Camera.h"
+#include "Model.h"
+#include "Mesh.h"
+#include "Text.h"
 
 //prototypes
 //callbacks
@@ -49,8 +52,8 @@ public:
 	const unsigned int *SCR_WIDTH;
 	const unsigned int *SCR_HEIGHT;
 
-	//list of active assets to draw
-
+	//list of active models to draw
+	std::vector<Model> models;
 
 	//mouse modes
 	MouseControlState mouseMode;
@@ -62,6 +65,8 @@ public:
 	unsigned int VAO;
 	unsigned int VBO;
 
+	//text stuff
+	Text textManager;
 
 	//takes in window display name, screen width, screen height, The last is if you want to have custom or preset controll callbacks.
 	GraphicsEngine(const char* windowName, const unsigned int *scr_WIDTH, const unsigned int *scr_HEIGHT, bool customCallback) {
@@ -103,6 +108,10 @@ public:
 		glEnable(GL_DEPTH_TEST);
 		stbi_set_flip_vertically_on_load(true);
 
+		//Blending
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
 		//mouse normal callback 
 		if (!customCallback) {
 			//mouse control State default
@@ -112,12 +121,108 @@ public:
 			mouseModePointer = &mouseMode;
 		}
 
+		//text setup
+		textManager = Text(*SCR_WIDTH, *SCR_HEIGHT);
+
 		//Camera
 		camera = Camera(*SCR_WIDTH, *SCR_HEIGHT, glm::vec3(0.0, 0.0, -10), true);
 
 		cameraPointer = &camera;
 
-		generateTestCube();
+		//generateTestCube();
+
+		shader = Shader("resources/shaders/basic_model.vs", "resources/shaders/basic_model.fs");
+	}
+
+	//switch Mouse Modes
+	void setMouseMode(MouseControlState state) {
+		if (state == MouseControlState::POV) {
+			mouseMode = state;
+			clampMouse = true;
+		}
+		else if (state == MouseControlState::MOUSE) {
+			clampMouse = false;
+			mouseMode = state;
+		}
+	}
+
+	//model functions
+	Model &getModel(int index) {
+		return models[index];
+	}
+
+	void addModel(string const &path) {
+		std::cout << "Added model at location: " << path << std::endl;
+		models.push_back(Model(path));
+	}
+
+	void addModel(string const &path, glm::vec3 position, glm::vec3 rotation, glm::vec3 scale) {
+		std::cout << "Added model at location: " << path << std::endl;
+		models.push_back(Model(path, position, rotation, scale));
+	}
+
+	void addText(std::string text, float x, float y, float scale, glm::vec3 color) {
+		textManager.addText(text, x, y, scale, color);
+	}
+
+	int renderFrame() {
+		if (glfwWindowShouldClose(window)) {
+			return 0;
+		}
+
+		//process input
+		//optional camera input
+		if (mouseMode != MouseControlState::CUSTOM) {
+			processEscapeInput();
+			camera.processInput(window);
+		}
+
+		//bind frame buffer
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		glViewport(0, 0, *SCR_WIDTH, *SCR_HEIGHT);
+
+		//clear the screen and start next frame
+		glClearColor(0.1f, 0.1f, 0.1f, 0.1f);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		//draw
+		//testing stuff
+		
+		//generateTestCube();
+		for (int i = 0; i < 10; i++) {
+			//drawTestCube();
+		}
+		
+
+		//draw models
+		for (int i = 0; i < models.size(); i++) {
+			shader.use();
+
+			glm::mat4 projection = camera.projection;
+			glm::mat4 view = camera.update();
+			shader.setMat4("projection", projection);
+			shader.setMat4("view", view);
+
+			glm::mat4 model = glm::mat4(1.0f);
+			model = glm::translate(model, models[i].position);
+			model = glm::scale(model, models[i].scale);	// it's a bit too big for our scene, so scale it down
+			shader.setMat4("model", model);
+			models[i].Draw(shader, camera);
+		}
+
+		//render text elements
+		textManager.render();
+
+		glfwSwapBuffers(window);
+		glfwPollEvents();
+
+		return 1;
+	}
+
+private:
+	//end opengl and free allocated resources
+	void terminate() {
+		glfwTerminate();
 	}
 
 	void generateTestCube() {
@@ -205,55 +310,7 @@ public:
 		glBindVertexArray(0);
 	}
 
-	int renderFrame() {
-		if (glfwWindowShouldClose(window)) {
-			return 0;
-		}
-
-		//process input
-		//optional camera input
-		if (mouseMode != MouseControlState::CUSTOM) {
-			processEscapeInput();
-			camera.processInput(window);
-		}
-
-		//bind frame buffer
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-		glViewport(0, 0, *SCR_WIDTH, *SCR_HEIGHT);
-
-		//clear the screen and start next frame
-		glClearColor(0.1f, 0.1f, 0.1f, 0.1f);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-		//draw
-		//generateTestCube();
-		for (int i = 0; i < 10; i++) {
-			drawTestCube();
-		}
-
-		glfwSwapBuffers(window);
-		glfwPollEvents();
-
-		return 1;
-	}
-
-	//end opengl and free allocated resources
-	void terminate() {
-		glfwTerminate();
-	}
-
 	//NONE CUSTOM INPUT CONTROL SECTION
-	//switch Mouse Modes
-	void setMouseMode(MouseControlState state) {
-		if (state == MouseControlState::POV) {
-			mouseMode = state;
-			clampMouse = true;
-		}
-		else if (state == MouseControlState::MOUSE) {
-			clampMouse = false;
-			mouseMode = state;
-		}
-	}
 
 	//releases clamp mouse if locked into the screen.
 	void processEscapeInput() {

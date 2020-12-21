@@ -39,16 +39,25 @@
     <ClInclude Include="Model.h">
       <Filter>Source Files\Graphics Tools</Filter>
     </ClInclude>
+    <ClInclude Include="Mesh.h">
+      <Filter>Source Files\Graphics Tools</Filter>
+    </ClInclude>
+    <ClInclude Include="Text.h">
+      <Filter>Source Files\Graphics Tools</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="glad.c">
+      <Filter>Source Files\OpenGl Components</Filter>
+    </ClCompile>
     <ClCompile Include="..\LibResources\include\img\ImageLoader.cpp">
       <Filter>Source Files\OpenGl Components</Filter>
     </ClCompile>
-    <ClCompile Include="glad.c">
-      <Filter>Source Files\OpenGl Components</Filter>
+    <ClCompile Include="TextTest.cpp">
+      <Filter>Source Files\Graphics Tools</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
