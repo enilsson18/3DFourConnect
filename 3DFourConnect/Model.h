@@ -193,12 +193,30 @@ private:
 			//assimp material
 			aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
 
-			//set vector colors
-			//materials.push_back
+			//setup material data for shader
+			Material mat;
+
 			//diffuse
+			aiColor3D diffuse(0.0f, 0.0f, 0.0f);
+			material->Get(AI_MATKEY_COLOR_DIFFUSE, diffuse);
+			mat.diffuse = glm::vec3(diffuse.r, diffuse.g, diffuse.b);
+
+			//specular
+			aiColor3D specular(0.0f, 0.0f, 0.0f);
+			material->Get(AI_MATKEY_COLOR_SPECULAR, specular);
+			mat.specular = glm::vec3(specular.r, specular.g, specular.b);
+
+			//ambient
+			aiColor3D ambient(0.0f, 0.0f, 0.0f);
+			material->Get(AI_MATKEY_COLOR_AMBIENT, ambient);
+			mat.ambient = glm::vec3(ambient.r, ambient.g, ambient.b);
+
+			//cout << mat.ambient.x << " " << mat.ambient.y << " " << mat.ambient.z << endl;
+
+			//add material to mesh
+			materials.push_back(mat);
 			
-			
-			//map setups
+			//material map setups
 			//diffuse maps
 			vector<Texture> diffuseMaps = loadMaterialTextures(material, aiTextureType_DIFFUSE, "texture_diffuse");
 			textures.insert(textures.end(), diffuseMaps.begin(), diffuseMaps.end());

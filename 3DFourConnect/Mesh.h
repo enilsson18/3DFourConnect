@@ -65,34 +65,52 @@ public:
 		shader.use();
 
 		//bind textures
-		unsigned int diffuseNr = 1;
-		unsigned int specularNr = 1;
-		unsigned int normalNr = 1;
-		unsigned int heightNr = 1;
-		for (unsigned int i = 0; i < textures.size(); i++)
-		{
-			glActiveTexture(GL_TEXTURE0 + i); //active texture unit before binding
-			//retrieve texture number (the N in diffuse_textureN)
-			string number;
-			string name = textures[i].type;
-			if (name == "texture_diffuse")
-				number = std::to_string(diffuseNr++);
-			else if (name == "texture_specular")
-				number = std::to_string(specularNr++); //transfer unsigned int to stream
-			else if (name == "texture_normal")
-				number = std::to_string(normalNr++); //transfer unsigned int to stream
-			else if (name == "texture_height")
-				number = std::to_string(heightNr++); //transfer unsigned int to stream
+		if (textures.size() != 0) {
+			shader.setBool("hasTextures", true);
 
-			//set the sampler to the correct texture unit
-			shader.setFloat((name + number).c_str(), i);
-			//finally bind the texture
-			glBindTexture(GL_TEXTURE_2D, textures[i].id);
+			unsigned int diffuseNr = 1;
+			unsigned int specularNr = 1;
+			unsigned int normalNr = 1;
+			unsigned int heightNr = 1;
+			for (unsigned int i = 0; i < textures.size(); i++)
+			{
+				glActiveTexture(GL_TEXTURE0 + i); //active texture unit before binding
+				//retrieve texture number (the N in diffuse_textureN)
+				string number;
+				string name = textures[i].type;
+				if (name == "texture_diffuse")
+					number = std::to_string(diffuseNr++);
+				else if (name == "texture_specular")
+					number = std::to_string(specularNr++); //transfer unsigned int to stream
+				else if (name == "texture_normal")
+					number = std::to_string(normalNr++); //transfer unsigned int to stream
+				else if (name == "texture_height")
+					number = std::to_string(heightNr++); //transfer unsigned int to stream
+
+				//set the sampler to the correct texture unit
+				shader.setFloat((name + number).c_str(), i);
+				//finally bind the texture
+				glBindTexture(GL_TEXTURE_2D, textures[i].id);
+			}
+		}
+		else {
+			shader.setBool("hasTextures", false);
 		}
 
 		//handle material settings
-		//material.baseColor = glm::vec3(255.0, 255.0, 255.0);
-		//shader.setVec3("baseColor", materials.diffuse);
+		if (materials.size() > 0) {
+			for (int i = 0; i < materials.size(); i++) {
+				shader.setVec3("diffuse_color", materials[i].diffuse);
+				shader.setVec3("specular_color", materials[i].specular);
+				shader.setVec3("ambient_color", materials[i].ambient);
+			}
+		}
+		//default to set all the colors to 1 so they don't change the values
+		else {
+			shader.setVec3("diffuse_color", glm::vec3(1.0f));
+			shader.setVec3("specular_color", glm::vec3(1.0f));
+			shader.setVec3("ambient_color", glm::vec3(1.0f));
+		}
 
 		//draw mesh
 		render();

@@ -48,12 +48,13 @@ public:
 	Camera camera;
 
 	Shader shader;
+	Shader testCubeShader;
 
 	const unsigned int *SCR_WIDTH;
 	const unsigned int *SCR_HEIGHT;
 
 	//list of active models to draw
-	std::vector<Model> models;
+	std::vector<Model> scene;
 
 	//mouse modes
 	MouseControlState mouseMode;
@@ -125,12 +126,13 @@ public:
 		textManager = Text(*SCR_WIDTH, *SCR_HEIGHT);
 
 		//Camera
-		camera = Camera(*SCR_WIDTH, *SCR_HEIGHT, glm::vec3(0.0, 0.0, -10), true);
+		camera = Camera(*SCR_WIDTH, *SCR_HEIGHT, glm::vec3(0.0, 0.0, 0.0), true);
 
 		cameraPointer = &camera;
 
-		//generateTestCube();
+		generateTestCube();
 
+		testCubeShader = Shader("resources/shaders/cube.vs", "resources/shaders/cube.fs");
 		shader = Shader("resources/shaders/basic_model.vs", "resources/shaders/basic_model.fs");
 	}
 
@@ -148,17 +150,17 @@ public:
 
 	//model functions
 	Model &getModel(int index) {
-		return models[index];
+		return scene[index];
 	}
 
 	void addModel(string const &path) {
 		std::cout << "Added model at location: " << path << std::endl;
-		models.push_back(Model(path));
+		scene.push_back(Model(path));
 	}
 
 	void addModel(string const &path, glm::vec3 position, glm::vec3 rotation, glm::vec3 scale) {
 		std::cout << "Added model at location: " << path << std::endl;
-		models.push_back(Model(path, position, rotation, scale));
+		scene.push_back(Model(path, position, rotation, scale));
 	}
 
 	void addText(std::string text, float x, float y, float scale, glm::vec3 color) {
@@ -195,7 +197,9 @@ public:
 		
 
 		//draw models
-		for (int i = 0; i < models.size(); i++) {
+		for (int i = 0; i < scene.size(); i++) {
+			//drawTestCube(scene[i].position);
+
 			shader.use();
 
 			glm::mat4 projection = camera.projection;
@@ -204,10 +208,10 @@ public:
 			shader.setMat4("view", view);
 
 			glm::mat4 model = glm::mat4(1.0f);
-			model = glm::translate(model, models[i].position);
-			model = glm::scale(model, models[i].scale);	// it's a bit too big for our scene, so scale it down
+			model = glm::translate(model, scene[i].position);
+			model = glm::scale(model, scene[i].scale);	// it's a bit too big for our scene, so scale it down
 			shader.setMat4("model", model);
-			models[i].Draw(shader, camera);
+			scene[i].Draw(shader, camera);
 		}
 
 		//render text elements
@@ -291,18 +295,18 @@ private:
 		glEnableVertexAttribArray(0);
 	}
 
-	void drawTestCube() {
+	void drawTestCube(glm::vec3 pos) {
 		//draw it
 		//use shader and set view and projection panes
-		shader.use();
-		shader.setMat4("projection", camera.projection);
-		shader.setMat4("view", camera.update());
+		testCubeShader.use();
+		testCubeShader.setMat4("projection", camera.projection);
+		testCubeShader.setMat4("view", camera.update());
 
 		//set coords and scale
 		glm::mat4 cubeModel(1);
-		cubeModel = glm::translate(cubeModel, glm::vec3(0));
+		cubeModel = glm::translate(cubeModel, pos);
 		cubeModel = glm::scale(cubeModel, glm::vec3(1));
-		shader.setMat4("model", cubeModel);
+		testCubeShader.setMat4("model", cubeModel);
 
 		//bind, draw, then reset bind to vao
 		glBindVertexArray(VAO);

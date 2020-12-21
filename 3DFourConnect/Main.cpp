@@ -38,10 +38,14 @@ int main() {
 	graphics.textManager.addText("This is sample text", 25.0f, 25.0f, 1.0f, glm::vec3(0.5, 0.8f, 0.2f));
 
 	//add models to the scene
-	graphics.addModel("C:\\Users\\Erik\\source\\repos\\3DFourConnect\\3DFourConnect\\resources\\objects\\3dfourconnect\\3dFourConnect.obj");
+	graphics.addModel("C:\\Users\\Erik\\source\\repos\\3DFourConnect\\3DFourConnect\\resources\\objects\\3dfourconnect\\3dfourconnectFIXED.obj");
 	graphics.addModel("C:\\Users\\Erik\\source\\repos\\3DFourConnect\\3DFourConnect\\resources\\objects\\testing\\backpack\\backpack.obj");
+	graphics.addModel("C:\\Users\\Erik\\source\\repos\\3DFourConnect\\3DFourConnect\\resources\\objects\\redball\\redball.obj");
+	graphics.addModel("C:\\Users\\Erik\\source\\repos\\3DFourConnect\\3DFourConnect\\resources\\objects\\blueball\\blueball.obj");
 
-	graphics.getModel(0).setPosition(glm::vec3(20, -10, 0));
+	for (int i = 0; i < 4; i++) {
+		graphics.getModel(i).setPosition(glm::vec3(15*i, -5, 0));
+	}
 
 	int fpsCount = 0;
 	int fpsCounter = 0;

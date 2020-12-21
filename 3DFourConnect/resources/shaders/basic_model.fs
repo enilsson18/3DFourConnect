@@ -3,12 +3,23 @@ out vec4 FragColor;
 
 in vec2 TexCoords;
 
+uniform bool hasTextures;
 uniform sampler2D texture_diffuse1;
-//uniform vec3 base_color;
-//uniform vec3 base_color = vec3(1.0, 0.0, 0.0);
+
+uniform vec3 diffuse_color;
+uniform vec3 specular_color;
+uniform vec3 ambient_color;
 
 void main()
-{    
-    //FragColor = vec4(base_color, 1.0) * texture(texture_diffuse1, TexCoords);
-    FragColor = texture(texture_diffuse1, TexCoords);
+{   
+	//texture management
+	if (hasTextures){
+    	FragColor = texture(texture_diffuse1, TexCoords);
+    }
+    else {
+    	FragColor = vec4(1.0);
+    }
+
+    //material colors: diffuse
+    FragColor *= vec4(diffuse_color, 1.0);
 }
