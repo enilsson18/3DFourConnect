@@ -25,19 +25,51 @@
 #include "GraphicsEngine.h"
 #include "Text.h"
 
+//Board and game classes
+#include "GameManager.h"
+#include "Board.h"
+#include "Piece.h"
+
+//prototypes
+//control callback for clicking the mouse
+void mouse_button_callback_custom(GLFWwindow* window, int button, int action, int mods);
+//control callback for moving the mouse
+void mouse_callback_custom(GLFWwindow* window, double xpos, double ypos);
+
 // settings
 const unsigned int SCR_WIDTH = 1600;
 const unsigned int SCR_HEIGHT = 900;
 
 const double fps = 60;
 
+GameManager *gM;
+
 int main() {
-	GraphicsEngine graphics("3D Four Connect", &SCR_WIDTH, &SCR_HEIGHT, false);
+	//make the graphics engine (Jordan: Do not focus too much on this, it is very complicated and not relevant to the problem.
+	GraphicsEngine graphics("3D Four Connect", &SCR_WIDTH, &SCR_HEIGHT, true);
+
+	//make the board and game manager
+	GameManager gameManager(graphics, graphics.camera, glm::vec3(0, 0, 0));
+
+	//set pointers
+	gM = &gameManager;
+
+	//set callbacks
+	glfwSetCursorPosCallback(graphics.window, mouse_callback_custom);
+	glfwSetMouseButtonCallback(graphics.window, mouse_button_callback_custom);
 
 	//add text
 	graphics.textManager.addText("This is sample text", 25.0f, 25.0f, 1.0f, glm::vec3(0.5, 0.8f, 0.2f));
 
+	//ignore these
 	//add models to the scene
+<<<<<<< HEAD
+	//graphics.addModel("C:\\Users\\Erik\\source\\repos\\3DFourConnect\\3DFourConnect\\resources\\objects\\delineroom\\delineroom.obj");
+	//graphics.addModel("C:\\Users\\Erik\\source\\repos\\3DFourConnect\\3DFourConnect\\resources\\objects\\3dfourconnect\\3dfourconnectFIXED.obj");
+	//graphics.addModel("C:\\Users\\Erik\\source\\repos\\3DFourConnect\\3DFourConnect\\resources\\objects\\testing\\backpack\\backpack.obj");
+	//graphics.addModel("C:\\Users\\Erik\\source\\repos\\3DFourConnect\\3DFourConnect\\resources\\objects\\redball\\redball.obj");
+	//graphics.addModel("C:\\Users\\Erik\\source\\repos\\3DFourConnect\\3DFourConnect\\resources\\objects\\blueball\\blueball.obj");
+=======
 	graphics.addModel("C:\\Users\\Erik\\source\\repos\\3DFourConnect\\3DFourConnect\\resources\\objects\\3dfourconnect\\3dfourconnectFIXED.obj");
 	graphics.addModel("C:\\Users\\Erik\\source\\repos\\3DFourConnect\\3DFourConnect\\resources\\objects\\testing\\backpack\\backpack.obj");
 	graphics.addModel("C:\\Users\\Erik\\source\\repos\\3DFourConnect\\3DFourConnect\\resources\\objects\\redball\\redball.obj");
@@ -46,6 +78,7 @@ int main() {
 	for (int i = 0; i < 4; i++) {
 		graphics.getModel(i).setPosition(glm::vec3(15*i, -5, 0));
 	}
+>>>>>>> 4bc2f57b2f0f607b78ceb9e9b625cfbaea7edb40
 
 	int fpsCount = 0;
 	int fpsCounter = 0;
@@ -57,9 +90,10 @@ int main() {
 
 		//input
 
+		//update the board and game
+		gameManager.update();
 
-		//update game world info
-
+		//std::cout << graphics.camera.yaw << " " << graphics.camera.pitch << std::endl;
 
 		//render frame
 		gameState = graphics.renderFrame();
@@ -95,4 +129,22 @@ int main() {
 	}
 
 	return 0;
+}
+
+//clicking
+void mouse_button_callback_custom(GLFWwindow* window, int button, int action, int mods)
+{
+	if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
+		(*gM).leftClick();
+	}
+
+	if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS) {
+		(*gM).rightClick();
+	}
+}
+
+//mouse movement
+void mouse_callback_custom(GLFWwindow* window, double xpos, double ypos)
+{
+	(*gM).mousePieceSelect(xpos, ypos);
 }

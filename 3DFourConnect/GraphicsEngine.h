@@ -121,12 +121,19 @@ public:
 			clampMousePointer = &clampMouse;
 			mouseModePointer = &mouseMode;
 		}
+		else {
+			setMouseMode(MouseControlState::CUSTOM);
+		}
 
 		//text setup
 		textManager = Text(*SCR_WIDTH, *SCR_HEIGHT);
 
 		//Camera
 		camera = Camera(*SCR_WIDTH, *SCR_HEIGHT, glm::vec3(0.0, 0.0, 0.0), true);
+<<<<<<< HEAD
+		camera.setPos(glm::vec3( 0.0f, 7*1.5f, 20.0f));
+=======
+>>>>>>> 4bc2f57b2f0f607b78ceb9e9b625cfbaea7edb40
 
 		cameraPointer = &camera;
 
@@ -153,14 +160,24 @@ public:
 		return scene[index];
 	}
 
-	void addModel(string const &path) {
+	Model &addModel(string const &path) {
 		std::cout << "Added model at location: " << path << std::endl;
 		scene.push_back(Model(path));
+<<<<<<< HEAD
+
+		return scene[scene.size() - 1];
+=======
+>>>>>>> 4bc2f57b2f0f607b78ceb9e9b625cfbaea7edb40
 	}
 
-	void addModel(string const &path, glm::vec3 position, glm::vec3 rotation, glm::vec3 scale) {
+	Model &addModel(string const &path, glm::vec3 position, glm::vec3 rotation, glm::vec3 scale) {
 		std::cout << "Added model at location: " << path << std::endl;
 		scene.push_back(Model(path, position, rotation, scale));
+<<<<<<< HEAD
+
+		return scene[scene.size() - 1];
+=======
+>>>>>>> 4bc2f57b2f0f607b78ceb9e9b625cfbaea7edb40
 	}
 
 	void addText(std::string text, float x, float y, float scale, glm::vec3 color) {

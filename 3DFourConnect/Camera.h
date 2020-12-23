@@ -12,6 +12,7 @@
 #include <shader.h>
 
 #include <string>
+#include <cmath>
 #include <iostream>
 
 class Camera {
@@ -67,7 +68,7 @@ public:
 		lastY = 900.0f / 2.0;
 		fov = 45.0f;
 
-		nearPlane = 0.1f;
+		nearPlane = 1.0f;
 		farPlane = 1000.0f;
 
 		//pov control info
@@ -98,6 +99,9 @@ public:
 		deceleration = 0.05;
 
 		rot = glm::vec3(0, 0, 0);
+
+		//do vector update
+		updateCameraVectors();
 	}
 
 	//set position
@@ -176,6 +180,22 @@ public:
 			pitch = -89.0f;
 
 		//update vectors
+		updateCameraVectors();
+	}
+
+	void lookAtTarget(glm::vec3 target) {
+		double pi = 3.14159265358979;
+
+		double dx = pos.x - target.x;
+		double dy = pos.y - target.y;
+		double dz = pos.z - target.z;
+
+		yaw = atan2(dz, dx) - pi;
+		pitch = -atan2(dy, sqrt(dx*dx + dz*dz));
+
+		yaw *= 180 / pi;
+		pitch *= 180 / pi;
+
 		updateCameraVectors();
 	}
 

@@ -149,11 +149,13 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="Asset.h" />
+    <ClInclude Include="Board.h" />
     <ClInclude Include="Camera.h" />
+    <ClInclude Include="GameManager.h" />
     <ClInclude Include="GraphicsEngine.h" />
     <ClInclude Include="Mesh.h" />
     <ClInclude Include="Model.h" />
+    <ClInclude Include="Piece.h" />
     <ClInclude Include="Quad.h" />
     <ClInclude Include="Skybox.h" />
     <ClInclude Include="Text.h" />
