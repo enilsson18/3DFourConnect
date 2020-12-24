@@ -9,12 +9,8 @@ Ks 0.500000 0.500000 0.500000
 Ke 0.000000 0.000000 0.000000
 Ni 1.450000
 d 1.000000
-illum 2
-<<<<<<< HEAD
+illum 2 
 map_Kd textures\\glass.png
-=======
-map_Kd Materials\\glass.png
->>>>>>> 4bc2f57b2f0f607b78ceb9e9b625cfbaea7edb40
 
 newmtl metal1
 Ns 225.000000
@@ -24,10 +20,5 @@ Ks 0.500000 0.500000 0.500000
 Ke 0.000000 0.000000 0.000000
 Ni 1.450000
 d 1.000000
-<<<<<<< HEAD
 illum 2
 map_Kd textures\\metal2.png
-=======
-illum 3
-map_Kd Materials\\metal2.png
->>>>>>> 4bc2f57b2f0f607b78ceb9e9b625cfbaea7edb40

@@ -54,6 +54,9 @@ int main() {
 	//set pointers
 	gM = &gameManager;
 
+	//set camera starting pos
+	graphics.camera.setPos(glm::vec3(0.0f, 7 * 1.5f, 20.0f));
+
 	//set callbacks
 	glfwSetCursorPosCallback(graphics.window, mouse_callback_custom);
 	glfwSetMouseButtonCallback(graphics.window, mouse_button_callback_custom);
@@ -63,22 +66,11 @@ int main() {
 
 	//ignore these
 	//add models to the scene
-<<<<<<< HEAD
 	//graphics.addModel("C:\\Users\\Erik\\source\\repos\\3DFourConnect\\3DFourConnect\\resources\\objects\\delineroom\\delineroom.obj");
 	//graphics.addModel("C:\\Users\\Erik\\source\\repos\\3DFourConnect\\3DFourConnect\\resources\\objects\\3dfourconnect\\3dfourconnectFIXED.obj");
 	//graphics.addModel("C:\\Users\\Erik\\source\\repos\\3DFourConnect\\3DFourConnect\\resources\\objects\\testing\\backpack\\backpack.obj");
 	//graphics.addModel("C:\\Users\\Erik\\source\\repos\\3DFourConnect\\3DFourConnect\\resources\\objects\\redball\\redball.obj");
 	//graphics.addModel("C:\\Users\\Erik\\source\\repos\\3DFourConnect\\3DFourConnect\\resources\\objects\\blueball\\blueball.obj");
-=======
-	graphics.addModel("C:\\Users\\Erik\\source\\repos\\3DFourConnect\\3DFourConnect\\resources\\objects\\3dfourconnect\\3dfourconnectFIXED.obj");
-	graphics.addModel("C:\\Users\\Erik\\source\\repos\\3DFourConnect\\3DFourConnect\\resources\\objects\\testing\\backpack\\backpack.obj");
-	graphics.addModel("C:\\Users\\Erik\\source\\repos\\3DFourConnect\\3DFourConnect\\resources\\objects\\redball\\redball.obj");
-	graphics.addModel("C:\\Users\\Erik\\source\\repos\\3DFourConnect\\3DFourConnect\\resources\\objects\\blueball\\blueball.obj");
-
-	for (int i = 0; i < 4; i++) {
-		graphics.getModel(i).setPosition(glm::vec3(15*i, -5, 0));
-	}
->>>>>>> 4bc2f57b2f0f607b78ceb9e9b625cfbaea7edb40
 
 	int fpsCount = 0;
 	int fpsCounter = 0;
