@@ -149,6 +149,9 @@ public:
 			clampMouse = false;
 			mouseMode = state;
 		}
+		else {
+			mouseMode = state;
+		}
 	}
 
 	//model functions
@@ -168,6 +171,15 @@ public:
 		scene.push_back(Model(path, position, rotation, scale));
 
 		return scene[scene.size() - 1];
+	}
+
+	void removeModel(Model *model) {
+		for (int i = 0; i < scene.size(); i++) {
+			if (&scene[i] == model) {
+				scene.erase(scene.begin() + i);
+				break;
+			}
+		}
 	}
 
 	void addText(std::string text, float x, float y, float scale, glm::vec3 color) {

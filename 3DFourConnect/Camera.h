@@ -132,6 +132,9 @@ public:
 	}
 
 	glm::mat4 update() {
+		//update vectors
+		//updateCameraVectors();
+
 		view = glm::mat4(1.0f);
 		view = glm::translate(view, pos);
 		view = glm::lookAt(pos, pos + Front, Up);
@@ -142,13 +145,20 @@ public:
 	//allows for easy camera movement
 	void updateCameraVectors()
 	{
-		// calculate the new Front vector
+		//make sure that when pitch is out of bounds, screen doesn't get flipped
+		if (pitch > 89.0f)
+			pitch = 89.0f;
+		if (pitch < -89.0f)
+			pitch = -89.0f;
+
+		//calculate the new Front vector
 		glm::vec3 front;
 		front.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
 		front.y = sin(glm::radians(pitch));
 		front.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
 		Front = glm::normalize(front);
-		// also re-calculate the Right and Up vector
+
+		//also re-calculate the Right and Up vector
 		Right = glm::normalize(glm::cross(Front, glm::vec3(0.0f, 1.0f, 0.0f)));  // normalize the vectors, because their length gets closer to 0 the more you look up or down which results in slower movement.
 		Up = glm::normalize(glm::cross(Right, Front));
 	}
@@ -172,15 +182,6 @@ public:
 		yoffset *= sensitivity * senseMultiplier;
 		yaw += xoffset;
 		pitch += yoffset;
-
-		// make sure that when pitch is out of bounds, screen doesn't get flipped
-		if (pitch > 89.0f)
-			pitch = 89.0f;
-		if (pitch < -89.0f)
-			pitch = -89.0f;
-
-		//update vectors
-		updateCameraVectors();
 	}
 
 	void lookAtTarget(glm::vec3 target) {

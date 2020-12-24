@@ -50,10 +50,6 @@ public:
 	}
 
 	Text(const unsigned int &SCR_WIDTH, const unsigned int &SCR_HEIGHT) {
-		//opengl state
-		glEnable(GL_CULL_FACE);
-		glEnable(GL_BLEND);
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 		//setup projection and camera angle for render of characters
 		shader = Shader("resources/shaders/text.vs", "resources/shaders/text.fs");

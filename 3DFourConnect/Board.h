@@ -45,8 +45,6 @@ public:
 		this->graphics = &graphics;
 
 		model = &(*this->graphics).addModel(BoardPath, pos, glm::vec3(0), glm::vec3(1));
-
-		clearBoard();
 	}
 
 	//range (0-3) inclusive (integers)
@@ -67,6 +65,7 @@ public:
 		for (int x = 0; x < 4; x++) {
 			for (int y = 0; y < 4; y++) {
 				for (int z = 0; z < 4; z++) {
+					(*graphics).removeModel(data[x][y][z].model);
 					data[x][y][z] = Piece();
 				}
 			}

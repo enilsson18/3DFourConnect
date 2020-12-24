@@ -62,7 +62,7 @@ int main() {
 	glfwSetMouseButtonCallback(graphics.window, mouse_button_callback_custom);
 
 	//add text
-	graphics.textManager.addText("This is sample text", 25.0f, 25.0f, 1.0f, glm::vec3(0.5, 0.8f, 0.2f));
+	//graphics.textManager.addText("This is sample text", 25.0f, 25.0f, 1.0f, glm::vec3(0.5, 0.8f, 0.2f));
 
 	//ignore these
 	//add models to the scene
