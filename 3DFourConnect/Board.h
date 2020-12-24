@@ -44,7 +44,9 @@ public:
 	Board(GraphicsEngine &graphics, glm::vec3 pos) {
 		this->graphics = &graphics;
 
-		model = &(*this->graphics).addModel(BoardPath, pos, glm::vec3(0), glm::vec3(1));
+		//model = &(*(this->graphics)).addModel(model, BoardPath, pos, glm::vec3(0), glm::vec3(1));
+		(*(this->graphics)).addModel(model, BoardPath, pos, glm::vec3(0), glm::vec3(1));
+		//std::cout << model << std::endl;
 	}
 
 	//range (0-3) inclusive (integers)
@@ -74,7 +76,8 @@ public:
 
 	//since the model's origin is at the bottom center, we just get the conversion rate of the y axis and multiply it by 1.5 since there are 4 plates
 	glm::vec3 getCenter() {
-		return (*model).position + glm::vec3(0, piecePosScalar.y * 1.5, 0);
+		//return (*model).position + glm::vec3(0, piecePosScalar.y * 1.5, 0);
+		return glm::vec3(0, piecePosScalar.y * 1.5, 0);
 	}
 };
 

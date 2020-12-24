@@ -52,11 +52,9 @@ public:
 		//construct the game setup
 		board = Board(graphics, pos);
 
-		//board.addPiece(Piece::Color::BLUE, 0, 3, 0);
-
 		currentTurn = Piece::Color::RED;
 
-		stage = Stage::PLAY;
+		stage = Stage::TESTING;
 
 		//testing setup
 		if (stage == Stage::TESTING) {
@@ -78,7 +76,7 @@ public:
 			checkGameInput();
 
 			//make cam look at target and stay locked at a set distance
-			(*camera).setPos(board.getCenter() + glm::normalize((*camera).pos - board.getCenter()) * camFollowDistance);
+			(*camera).setPos(board.getCenter() + normalize((*camera).pos - board.getCenter()) * camFollowDistance);
 			(*camera).lookAtTarget(board.getCenter());
 
 			//update vectors
@@ -91,7 +89,8 @@ public:
 		if (stage == Stage::TESTING) {
 			(*camera).processInput((*graphics).window);
 			(*camera).lookAtTarget(board.getCenter());
-			(*testPiece.model).setPosition((*camera).pos + mouseRay * 1.0f);
+			(*testPiece.model).setPosition(glm::vec3(0, 20, 0));
+			//(*testPiece.model).setPosition((*camera).pos + mouseRay * 1.0f);
 		}
 	}
 
@@ -440,12 +439,14 @@ public:
 
 	void bindPreviewPiece() {
 		//update position
-		glm::vec3 displacement = glm::vec3(3.0f, 0.0f, 3.0f);
-
-		(*previewPiece.model).setPosition((*camera).pos + displacement * ((*camera).Front + (*camera).Right + (*camera).Up));
+		glm::vec3 displacement = glm::vec3(9.0f, 4.5f, 15.0f);
+		(*previewPiece.model).setPosition((*camera).pos + displacement.z * (*camera).Front + displacement.x * (*camera).Right + displacement.y * (*camera).Up);
+		//printVector((*camera).pos);
 
 		//update rotation
 		glm::vec3 rotationDisplacement = glm::vec3(1.0f, 2.0f, 3.0f);
+		(*previewPiece.model).setRotation((*previewPiece.model).rotation + rotationDisplacement);
+		
 	}
 
 	//utility

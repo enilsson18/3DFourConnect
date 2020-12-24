@@ -55,6 +55,7 @@ public:
 
 	//list of active models to draw
 	std::vector<Model> scene;
+	std::vector<Model**> scenePointers;
 
 	//mouse modes
 	MouseControlState mouseMode;
@@ -129,7 +130,7 @@ public:
 		textManager = Text(*SCR_WIDTH, *SCR_HEIGHT);
 
 		//Camera
-		camera = Camera(*SCR_WIDTH, *SCR_HEIGHT, glm::vec3(0.0, 0.0, 0.0), true);
+		camera = Camera(*SCR_WIDTH, *SCR_HEIGHT, glm::vec3(0.0, 7*1.5, 20), true);
 
 		cameraPointer = &camera;
 
@@ -159,18 +160,32 @@ public:
 		return scene[index];
 	}
 
-	Model &addModel(string const &path) {
+	void addModel(Model* &ptr, string const &path) {
 		std::cout << "Added model at location: " << path << std::endl;
 		scene.push_back(Model(path));
+		ptr = &scene[scene.size() - 1];
+		scenePointers.push_back(&ptr);
 
-		return scene[scene.size() - 1];
+		resetModelPointers();
+
+		//return scene[scene.size() - 1];
 	}
 
-	Model &addModel(string const &path, glm::vec3 position, glm::vec3 rotation, glm::vec3 scale) {
+	void addModel(Model* &ptr, string const &path, glm::vec3 position, glm::vec3 rotation, glm::vec3 scale) {
 		std::cout << "Added model at location: " << path << std::endl;
 		scene.push_back(Model(path, position, rotation, scale));
+		ptr = &scene[scene.size() - 1];
+		scenePointers.push_back(&ptr);
 
-		return scene[scene.size() - 1];
+		resetModelPointers();
+
+		//return scene[scene.size() - 1];
+	}
+
+	void resetModelPointers() {
+		for (int i = 0; i < scene.size(); i++) {
+			(*scenePointers[i]) = &scene[i];
+		}
 	}
 
 	void removeModel(Model *model) {
@@ -228,6 +243,9 @@ public:
 
 			glm::mat4 model = glm::mat4(1.0f);
 			model = glm::translate(model, scene[i].position);
+			model = glm::rotate(model, glm::radians(scene[i].rotation.x), glm::vec3(1.0, 0.0, 0.0));
+			model = glm::rotate(model, glm::radians(scene[i].rotation.y), glm::vec3(0.0, 1.0, 0.0));
+			model = glm::rotate(model, glm::radians(scene[i].rotation.z), glm::vec3(0.0, 0.0, 1.0));
 			model = glm::scale(model, scene[i].scale);	// it's a bit too big for our scene, so scale it down
 			shader.setMat4("model", model);
 			scene[i].Draw(shader, camera);

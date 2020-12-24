@@ -43,10 +43,10 @@ public:
 
 		//make models based on color, set the position, and set the pointer to the model.
 		if (this->type == Color::RED) {
-			model = &(*this->graphics).addModel(RedModelPath, pos, glm::vec3(0), glm::vec3(1));
+			(*(this->graphics)).addModel(model, RedModelPath, pos, glm::vec3(0), glm::vec3(1));
 		}
 		else if (this->type == Color::BLUE) {
-			model = &(*this->graphics).addModel(BlueModelPath, pos, glm::vec3(0), glm::vec3(1));
+			(*(this->graphics)).addModel(model, BlueModelPath, pos, glm::vec3(0), glm::vec3(1));
 		}
 	}
 };

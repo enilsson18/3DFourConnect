@@ -72,6 +72,10 @@ int main() {
 	//graphics.addModel("C:\\Users\\Erik\\source\\repos\\3DFourConnect\\3DFourConnect\\resources\\objects\\redball\\redball.obj");
 	//graphics.addModel("C:\\Users\\Erik\\source\\repos\\3DFourConnect\\3DFourConnect\\resources\\objects\\blueball\\blueball.obj");
 
+	//add test piece
+	gameManager.board.addPiece(Piece::Color::BLUE, 0, 3, 0);
+	gameManager.board.addPiece(Piece::Color::BLUE, 1, 3, 0);
+
 	int fpsCount = 0;
 	int fpsCounter = 0;
 
