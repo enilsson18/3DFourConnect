@@ -30,6 +30,12 @@
 #include "Board.h"
 #include "Piece.h"
 
+//file paths
+const char* RedModelPath = "C:\\Users\\Erik\\source\\repos\\3DFourConnect\\3DFourConnect\\resources\\objects\\redball\\redball.obj";
+const char* BlueModelPath = "C:\\Users\\Erik\\source\\repos\\3DFourConnect\\3DFourConnect\\resources\\objects\\blueball\\blueball.obj";
+const char* BoardModelPath = "C:\\Users\\Erik\\source\\repos\\3DFourConnect\\3DFourConnect\\resources\\objects\\3dfourconnect\\3dfourconnectFIXED.obj";
+const char* BackpackModelPath = "C:\\Users\\Erik\\source\\repos\\3DFourConnect\\3DFourConnect\\resources\\objects\\testing\\backpack\\backpack.obj";
+
 //prototypes
 //control callback for clicking the mouse
 void mouse_button_callback_custom(GLFWwindow* window, int button, int action, int mods);
@@ -48,6 +54,11 @@ int main() {
 	//make the graphics engine (Jordan: Do not focus too much on this, it is very complicated and not relevant to the problem.
 	GraphicsEngine graphics("3D Four Connect", &SCR_WIDTH, &SCR_HEIGHT, true);
 
+	//add all the models that are going to be used immediatley
+	graphics.addModel(BoardModelPath);
+	graphics.addModel(RedModelPath);
+	graphics.addModel(BlueModelPath);
+
 	//make the board and game manager
 	GameManager gameManager(graphics, graphics.camera, glm::vec3(0, 0, 0));
 
@@ -55,7 +66,7 @@ int main() {
 	gM = &gameManager;
 
 	//set camera starting pos
-	graphics.camera.setPos(glm::vec3(0.0f, 7 * 1.5f, 20.0f));
+	graphics.camera.setPos(glm::vec3(0.0f, 7 * 1.5f, 40.0f));
 
 	//set callbacks
 	glfwSetCursorPosCallback(graphics.window, mouse_callback_custom);
@@ -64,17 +75,9 @@ int main() {
 	//add text
 	//graphics.textManager.addText("This is sample text", 25.0f, 25.0f, 1.0f, glm::vec3(0.5, 0.8f, 0.2f));
 
-	//ignore these
-	//add models to the scene
-	//graphics.addModel("C:\\Users\\Erik\\source\\repos\\3DFourConnect\\3DFourConnect\\resources\\objects\\delineroom\\delineroom.obj");
-	//graphics.addModel("C:\\Users\\Erik\\source\\repos\\3DFourConnect\\3DFourConnect\\resources\\objects\\3dfourconnect\\3dfourconnectFIXED.obj");
-	//graphics.addModel("C:\\Users\\Erik\\source\\repos\\3DFourConnect\\3DFourConnect\\resources\\objects\\testing\\backpack\\backpack.obj");
-	//graphics.addModel("C:\\Users\\Erik\\source\\repos\\3DFourConnect\\3DFourConnect\\resources\\objects\\redball\\redball.obj");
-	//graphics.addModel("C:\\Users\\Erik\\source\\repos\\3DFourConnect\\3DFourConnect\\resources\\objects\\blueball\\blueball.obj");
-
 	//add test piece
-	gameManager.board.addPiece(Piece::Color::BLUE, 0, 3, 0);
-	gameManager.board.addPiece(Piece::Color::BLUE, 1, 3, 0);
+	//gameManager.board.addPiece(Piece::Color::BLUE, 0, 3, 0);
+	//gameManager.board.addPiece(Piece::Color::RED, 1, 3, 0);
 
 	int fpsCount = 0;
 	int fpsCounter = 0;
@@ -87,6 +90,7 @@ int main() {
 		//input
 
 		//update the board and game
+
 		gameManager.update();
 
 		//std::cout << graphics.camera.yaw << " " << graphics.camera.pitch << std::endl;

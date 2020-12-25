@@ -29,33 +29,16 @@ unsigned int TextureFromFile(const char *path, const string &directory, bool gam
 //Do not reinitialize the model
 class Model {
 public:
-	//external Model data
-	glm::vec3 position;
-	glm::vec3 rotation;
-	glm::vec3 scale;
-
 	//model data
 	vector<Texture> textures_loaded;
 	vector<Mesh> meshes;
 	string directory;
+	string name;
 	bool gammaCorrection;
 
 	//expects file path to 3d model
 	Model(string const &path, bool gamma = false) : gammaCorrection(gamma)
 	{
-		position = glm::vec3(0.0f);
-		rotation = glm::vec3(0.0f);
-		scale = glm::vec3(1.0f);
-
-		loadModel(path);
-	}
-
-	//expects file path to 3d model, glm::vec3 of position, rotation, and scale
-	Model(string const &path, glm::vec3 position, glm::vec3 rotation, glm::vec3 scale, bool gamma = false) : gammaCorrection(gamma) {
-		this->position = position;
-		this->rotation = rotation;
-		this->scale = scale;
-
 		loadModel(path);
 	}
 
@@ -64,39 +47,6 @@ public:
 		for (unsigned int i = 0; i < meshes.size(); i++) {
 			meshes[i].Draw(shader);
 		}
-	}
-
-	void setPosition(glm::vec3 position) {
-		this->position = position;
-	}
-
-	void setRotation(glm::vec3 rotation) {
-		this->rotation = rotation;
-
-		if (this->rotation.x > 360) {
-			this->rotation.x = this->rotation.x - 360;
-		}
-		if (this->rotation.x < 0) {
-			this->rotation.x = 360 + this->rotation.x;
-		}
-
-		if (this->rotation.y > 360) {
-			this->rotation.y= this->rotation.y - 360;
-		}
-		if (this->rotation.y < 0) {
-			this->rotation.y = 360 + this->rotation.y;
-		}
-
-		if (this->rotation.z > 360) {
-			this->rotation.z = this->rotation.z - 360;
-		}
-		if (this->rotation.z < 0) {
-			this->rotation.z = 360 + this->rotation.z;
-		}
-	}
-
-	void setScale(glm::vec3 scale) {
-		this->scale = scale;
 	}
 
 private:
@@ -114,7 +64,12 @@ private:
 		}
 
 		//retrieve the directory path of the filepath
-		directory = path.substr(0, path.find_last_of('/'));
+		directory = path.substr(0, path.find_last_of('\\'));
+
+		//retrieve the name of the model file
+		std::size_t found = path.find_last_of('\\');
+		name = path.substr(found + 1);
+		//std::cout << "Name: " << name << std::endl;
 
 		//process ASSIMP's root node recursively
 		processNode(scene->mRootNode, scene);
@@ -291,7 +246,7 @@ private:
 unsigned int TextureFromFile(const char *path, const string &directory, bool gamma)
 {
 	string filename = string(path);
-	filename = directory + "\\..\\" + filename;
+	filename = directory + "\\" + filename;
 	cout << filename << endl;
 
 	unsigned int textureID;

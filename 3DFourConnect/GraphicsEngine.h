@@ -15,9 +15,11 @@
 #include <shader.h>
 
 #include <iostream>
+#include <vector>
 
 //graphics tools
 #include "Camera.h"
+#include "Asset.h"
 #include "Model.h"
 #include "Mesh.h"
 #include "Text.h"
@@ -40,6 +42,7 @@ MouseControlState *mouseModePointer;
 
 Camera *cameraPointer;
 
+//add all models before you start making assets
 class GraphicsEngine {
 public:
 	//normal vars
@@ -53,9 +56,11 @@ public:
 	const unsigned int *SCR_WIDTH;
 	const unsigned int *SCR_HEIGHT;
 
-	//list of active models to draw
-	std::vector<Model> scene;
-	std::vector<Model**> scenePointers;
+	//list of active models
+	std::vector<Model> models;
+
+	//list of the physical models with all the transforms applied
+	std::vector<Asset*> scene;
 
 	//mouse modes
 	MouseControlState mouseMode;
@@ -156,47 +161,49 @@ public:
 	}
 
 	//model functions
-	Model &getModel(int index) {
-		return scene[index];
+	Model *getModel(int index) {
+		return &models[index];
 	}
 
-	void addModel(Model* &ptr, string const &path) {
+	Model *getModel(string str) {
+		for (int i = 0; i < models.size(); i++) {
+			if (models[i].name == str) {
+				//std::cout << "Name found: " << models[i].name << " vs. " << str << std::endl;
+				return &models[i];
+			}
+		}
+
+		std::cout << "returned null" << std::endl;
+		return NULL;
+	}
+
+	void addModel(string const &path) {
 		std::cout << "Added model at location: " << path << std::endl;
-		scene.push_back(Model(path));
-		ptr = &scene[scene.size() - 1];
-		scenePointers.push_back(&ptr);
-
-		resetModelPointers();
-
-		//return scene[scene.size() - 1];
+		models.push_back(Model(path));
 	}
 
-	void addModel(Model* &ptr, string const &path, glm::vec3 position, glm::vec3 rotation, glm::vec3 scale) {
-		std::cout << "Added model at location: " << path << std::endl;
-		scene.push_back(Model(path, position, rotation, scale));
-		ptr = &scene[scene.size() - 1];
-		scenePointers.push_back(&ptr);
+	//asset stuff
+	//add refrences to assets
+	void addAsset(Asset *asset) {
+		scene.push_back(asset);
+		std::cout << "final " << scene[scene.size()-1] << std::endl;
 
-		resetModelPointers();
-
-		//return scene[scene.size() - 1];
-	}
-
-	void resetModelPointers() {
 		for (int i = 0; i < scene.size(); i++) {
-			(*scenePointers[i]) = &scene[i];
+			std::cout << "Draw Name: " << (*(*scene[i]).model).name << std::endl;
 		}
 	}
 
-	void removeModel(Model *model) {
+	//remove assets
+	void removeAsset(Asset &asset) {
 		for (int i = 0; i < scene.size(); i++) {
-			if (&scene[i] == model) {
+			if (scene[i] == &asset) {
 				scene.erase(scene.begin() + i);
 				break;
 			}
 		}
 	}
 
+	//text stuff
 	void addText(std::string text, float x, float y, float scale, glm::vec3 color) {
 		textManager.addText(text, x, y, scale, color);
 	}
@@ -230,9 +237,9 @@ public:
 		}
 		
 
-		//draw models
+		//draw assets with the corresponding model
 		for (int i = 0; i < scene.size(); i++) {
-			//drawTestCube(scene[i].position);
+			//drawTestCube(glm::vec3(0));
 
 			shader.use();
 
@@ -242,13 +249,15 @@ public:
 			shader.setMat4("view", view);
 
 			glm::mat4 model = glm::mat4(1.0f);
-			model = glm::translate(model, scene[i].position);
-			model = glm::rotate(model, glm::radians(scene[i].rotation.x), glm::vec3(1.0, 0.0, 0.0));
-			model = glm::rotate(model, glm::radians(scene[i].rotation.y), glm::vec3(0.0, 1.0, 0.0));
-			model = glm::rotate(model, glm::radians(scene[i].rotation.z), glm::vec3(0.0, 0.0, 1.0));
-			model = glm::scale(model, scene[i].scale);	// it's a bit too big for our scene, so scale it down
+			model = glm::translate(model, scene[i]->position);
+			//std::cout << scene[i]->position.x << std::endl;
+			model = glm::rotate(model, glm::radians(scene[i]->rotation.x), glm::vec3(1.0, 0.0, 0.0));
+			model = glm::rotate(model, glm::radians(scene[i]->rotation.y), glm::vec3(0.0, 1.0, 0.0));
+			model = glm::rotate(model, glm::radians(scene[i]->rotation.z), glm::vec3(0.0, 0.0, 1.0));
+			model = glm::scale(model, scene[i]->scale);	// it's a bit too big for our scene, so scale it down
 			shader.setMat4("model", model);
-			scene[i].Draw(shader, camera);
+			//std::cout << "Draw Name: " << scene[i]->model->name << std::endl;
+			scene[i]->model->Draw(shader, camera);
 		}
 
 		//render text elements

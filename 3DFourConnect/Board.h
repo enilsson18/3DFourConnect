@@ -30,7 +30,7 @@ const char* BoardPath = "C:\\Users\\Erik\\source\\repos\\3DFourConnect\\3DFourCo
 class Board {
 public:
 	GraphicsEngine *graphics;
-	Model *model;
+	Asset asset;
 
 	Piece data[4][4][4];
 
@@ -44,8 +44,8 @@ public:
 	Board(GraphicsEngine &graphics, glm::vec3 pos) {
 		this->graphics = &graphics;
 
-		//model = &(*(this->graphics)).addModel(model, BoardPath, pos, glm::vec3(0), glm::vec3(1));
-		(*(this->graphics)).addModel(model, BoardPath, pos, glm::vec3(0), glm::vec3(1));
+		asset = Asset((*(this->graphics)).getModel("3dfourconnectFIXED.obj"), pos, glm::vec3(0), glm::vec3(1));
+		(*(this->graphics)).addAsset(&asset);
 		//std::cout << model << std::endl;
 	}
 
@@ -57,7 +57,7 @@ public:
 		}
 
 		//since the origin of the board is at the bottom center, we just find the bottom left corner and work relatively.
-		glm::vec3 pos = (*model).position + (bottomLeft + glm::vec3(x,y,z)) * piecePosScalar;
+		glm::vec3 pos = asset.position + (bottomLeft + glm::vec3(x,y,z)) * piecePosScalar;
 		data[x][y][z] = Piece(graphics, color, pos);
 
 		return true;
@@ -67,7 +67,7 @@ public:
 		for (int x = 0; x < 4; x++) {
 			for (int y = 0; y < 4; y++) {
 				for (int z = 0; z < 4; z++) {
-					(*graphics).removeModel(data[x][y][z].model);
+					(*graphics).removeAsset(data[x][y][z].asset);
 					data[x][y][z] = Piece();
 				}
 			}

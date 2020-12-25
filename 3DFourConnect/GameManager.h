@@ -54,7 +54,7 @@ public:
 
 		currentTurn = Piece::Color::RED;
 
-		stage = Stage::TESTING;
+		stage = Stage::PLAY;
 
 		//testing setup
 		if (stage == Stage::TESTING) {
@@ -63,7 +63,7 @@ public:
 	}
 
 	void update() {
-		std::cout << (*graphics).scene.size() << std::endl;
+		//std::cout << (*graphics).scene.size() << std::endl;
 
 		//main game info
 		if (stage == Stage::PLAY) {
@@ -89,8 +89,7 @@ public:
 		if (stage == Stage::TESTING) {
 			(*camera).processInput((*graphics).window);
 			(*camera).lookAtTarget(board.getCenter());
-			(*testPiece.model).setPosition(glm::vec3(0, 20, 0));
-			//(*testPiece.model).setPosition((*camera).pos + mouseRay * 1.0f);
+			//testPiece.asset.setPosition((*camera).pos + mouseRay * 1.0f);
 		}
 	}
 
@@ -438,15 +437,22 @@ public:
 	}
 
 	void bindPreviewPiece() {
+		std::cout << "mem addr b4: " << &previewPiece.asset << std::endl;
 		//update position
 		glm::vec3 displacement = glm::vec3(9.0f, 4.5f, 15.0f);
-		(*previewPiece.model).setPosition((*camera).pos + displacement.z * (*camera).Front + displacement.x * (*camera).Right + displacement.y * (*camera).Up);
+
+		printVector(previewPiece.asset.position);
+
+		previewPiece.asset.setPosition((*camera).pos + displacement.z * (*camera).Front + displacement.x * (*camera).Right + displacement.y * (*camera).Up);
 		//printVector((*camera).pos);
 
 		//update rotation
 		glm::vec3 rotationDisplacement = glm::vec3(1.0f, 2.0f, 3.0f);
-		(*previewPiece.model).setRotation((*previewPiece.model).rotation + rotationDisplacement);
+		previewPiece.asset.setRotation(previewPiece.asset.rotation + rotationDisplacement);
+
+		printVector((*(*graphics).scene[1]).position);
 		
+		std::cout << "mem addr af: " << (*graphics).scene[1] << std::endl;
 	}
 
 	//utility

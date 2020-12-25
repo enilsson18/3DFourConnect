@@ -133,7 +133,7 @@ public:
 
 	glm::mat4 update() {
 		//update vectors
-		//updateCameraVectors();
+		updateCameraVectors();
 
 		view = glm::mat4(1.0f);
 		view = glm::translate(view, pos);
