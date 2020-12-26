@@ -46,7 +46,9 @@ public:
 
 		asset = new Asset((*(this->graphics)).getModel("3dfourconnectFIXED.obj"), pos, glm::vec3(0), glm::vec3(1));
 		(*(this->graphics)).addAsset(asset);
-		//std::cout << model << std::endl;
+		
+		//do initial setup for board
+		clearBoard();
 	}
 
 	//range (0-3) inclusive (integers)
@@ -56,22 +58,48 @@ public:
 			return false;
 		}
 
+		//remove old asset
+		graphics->removeAsset(data[x][y][z].asset);
 		//since the origin of the board is at the bottom center, we just find the bottom left corner and work relatively.
-		glm::vec3 pos = asset->position + (bottomLeft + glm::vec3(x,y,z)) * piecePosScalar;
+		glm::vec3 pos = getPiecePosFromCoord(x,y,z);
 		data[x][y][z] = Piece(graphics, color, pos);
 
 		return true;
+	}
+
+	glm::vec3 getPiecePosFromCoord(int x, int y, int z) {
+		return asset->position + (bottomLeft + glm::vec3(x, y, z)) * piecePosScalar;
 	}
 
 	void clearBoard() {
 		for (int x = 0; x < 4; x++) {
 			for (int y = 0; y < 4; y++) {
 				for (int z = 0; z < 4; z++) {
-					(*graphics).removeAsset(data[x][y][z].asset);
-					data[x][y][z] = Piece();
+					graphics->removeAsset(data[x][y][z].asset);
+					//since the origin of the board is at the bottom center, we just find the bottom left corner and work relatively.
+					glm::vec3 pos = getPiecePosFromCoord(x, y, z);
+					data[x][y][z] = Piece(graphics, Piece::Color::NONE, pos);
 				}
 			}
 		}
+	}
+
+	bool fullBoard() {
+		int pieces = 0;
+		for (int x = 0; x < 4; x++) {
+			for (int y = 0; y < 4; y++) {
+				for (int z = 0; z < 4; z++) {
+					if (data[x][y][z].type != Piece::Color::NONE) {
+						pieces += 1;
+					}
+				}
+			}
+		}
+
+		if (pieces == 4 * 4 * 4) {
+			return true;
+		}
+		return false;
 	}
 
 	//since the model's origin is at the bottom center, we just get the conversion rate of the y axis and multiply it by 1.5 since there are 4 plates

@@ -47,6 +47,7 @@ void mouse_callback_custom(GLFWwindow* window, double xpos, double ypos);
 const unsigned int SCR_WIDTH = 1600;
 const unsigned int SCR_HEIGHT = 900;
 
+bool fpsCounter = true;
 const double fps = 60;
 
 GameManager *gM;
@@ -117,7 +118,9 @@ int main() {
 		fpsCounter += 1000000 / diffCount;
 
 		if (fpsCount % int(fps) == 0) {
-			std::cout << "\rFPS: " << fpsCounter / fpsCount;
+			if (fpsCounter) {
+				std::cout << "\rFPS: " << fpsCounter / fpsCount;
+			}
 			fpsCount = 0;
 			fpsCounter = 0;
 		}

@@ -37,6 +37,14 @@ public:
 
 	}
 
+	Asset(glm::vec3 position) {
+		this->model = nullptr;
+
+		this->position = position;
+		this->rotation = glm::vec3(0.0f);
+		this->scale = glm::vec3(1.0f);
+	}
+
 	Asset(Model *model) {
 		this->model = model;
 

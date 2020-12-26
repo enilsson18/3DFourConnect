@@ -28,6 +28,7 @@ struct Character {
 
 struct Msg {
 	std::string text;
+	bool visible;
 	float x;
 	float y;
 	float scale;
@@ -50,7 +51,6 @@ public:
 	}
 
 	Text(const unsigned int &SCR_WIDTH, const unsigned int &SCR_HEIGHT) {
-
 		//setup projection and camera angle for render of characters
 		shader = Shader("resources/shaders/text.vs", "resources/shaders/text.fs");
 		projection = glm::ortho(0.0f, static_cast<float>(SCR_WIDTH), 0.0f, static_cast<float>(SCR_HEIGHT));
@@ -149,7 +149,9 @@ public:
 	//render the text each frame
 	void render() {
 		for (int i = 0; i < textList.size(); i++) {
-			RenderText(shader, textList[i].text, textList[i].x, textList[i].y, textList[i].scale, textList[i].color);
+			if (textList[i].visible) {
+				RenderText(shader, textList[i].text, textList[i].x, textList[i].y, textList[i].scale, textList[i].color);
+			}
 		}
 	}
 
@@ -157,6 +159,7 @@ public:
 		Msg msg;
 
 		msg.text = text;
+		msg.visible = true;
 		msg.x = x;
 		msg.y = y;
 		msg.scale = scale;

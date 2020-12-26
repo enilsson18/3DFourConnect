@@ -24,7 +24,7 @@ public:
 	GraphicsEngine *graphics;
 	Asset *asset;
 
-	float colliderRadius = 0.3f;
+	float colliderRadius = 0.75f;
 
 	//whether the piece is blue or red
 	enum Color { NONE = -1, OUTLINE = 0, RED = 1, BLUE = 2 };
@@ -39,7 +39,10 @@ public:
 		this->type = type;
 
 		//make models based on color, set the position, and set the pointer to the model.
-		if (this->type == Color::RED) {
+		if (this->type == Color::NONE) {
+			asset = new Asset(pos);
+		}
+		else if (this->type == Color::RED) {
 			asset = new Asset((*graphics).getModel("redball.obj"), pos, glm::vec3(0), glm::vec3(1));
 			//std::cout << "red" << std::endl;
 		}

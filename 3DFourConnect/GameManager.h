@@ -11,6 +11,9 @@
 
 #include <shader.h>
 
+#include <ppl.h>
+#include <ppltasks.h>
+#include <agents.h>
 #include <iostream>
 
 #include "Text.h"
@@ -28,6 +31,9 @@ public:
 	Camera *camera;
 
 	Board board;
+
+	bool rightClickStatus;
+	bool leftClickStatus;
 
 	float camFollowDistance;
 
@@ -49,6 +55,9 @@ public:
 
 		//default values init
 		camFollowDistance = 40.0f;
+
+		rightClickStatus = false;
+		leftClickStatus = false;
 
 		//construct the game setup
 		board = Board(graphics, pos);
@@ -75,7 +84,8 @@ public:
 		//main game info
 		if (stage == Stage::PLAY) {
 			//if the preview piece is not set then make it
-			if (previewPiece.type == Piece::NONE) {
+			if (previewPiece.type != currentTurn) {
+				graphics->removeAsset(previewPiece.asset);
 				previewPiece = Piece(graphics, currentTurn, glm::vec3(0));
 			}
 
@@ -89,8 +99,48 @@ public:
 			//update vectors
 			(*camera).updateCameraVectors();
 
+			//find selected pieces
+			glm::vec3 selectedPiece = checkSelectPiece();
+
+			//handle selecting pieces
+			//if a piece is selected and it has a type NONE
+			if (selectedPiece != glm::vec3(-1) && board.data[(int)selectedPiece.x][(int)selectedPiece.y][(int)selectedPiece.z].type == Piece::Color::NONE) {
+				//set outline piece location and visibility
+				outlinePiece.asset->setPosition(board.getPiecePosFromCoord((int)selectedPiece.x, (int)selectedPiece.y, (int)selectedPiece.z));
+				outlinePiece.asset->visible = true;
+
+				//check for right click or left click events to set piece
+				if (leftClickStatus) {
+					board.addPiece(currentTurn, (int)selectedPiece.x, (int)selectedPiece.y, (int)selectedPiece.z);
+					switchTurn();
+				}
+			}
+			else {
+				outlinePiece.asset->visible = false;
+			}
+
 			//bind and rotate preview piece
 			bindPreviewPiece();
+
+			//check win case
+			Piece::Color win = checkWin();
+			if (win == Piece::Color::BLUE) {
+				//cout << "BLUE WINS!" << endl;
+				graphics->textManager.addText("Blue Wins!", 25.0f, 25.0f, 1.0f, glm::vec3(0.5, 0.8f, 0.2f));
+				board.clearBoard();
+			}
+			else if (win == Piece::Color::RED) {
+				//cout << "RED WINS!" << endl;
+				graphics->textManager.addText("Red Wins!", 25.0f, 25.0f, 1.0f, glm::vec3(0.5, 0.8f, 0.2f));
+				board.clearBoard();
+			}
+			//nobody wins
+			else if (board.fullBoard()) {
+				//cout << "NOBODY WINS" << endl;
+				graphics->textManager.addText("Nobody Wins!", 25.0f, 25.0f, 1.0f, glm::vec3(0.5, 0.8f, 0.2f));
+				//complete_after()
+				board.clearBoard();
+			}
 		}
 
 		if (stage == Stage::TESTING) {
@@ -98,6 +148,10 @@ public:
 			(*camera).lookAtTarget(board.getCenter());
 			testPiece.asset->setPosition((*camera).pos + mouseRay * 20.0f);
 		}
+
+		//reset mouse buttons
+		rightClickStatus = false;
+		leftClickStatus = false;
 	}
 
 	void checkGameInput() {
@@ -417,12 +471,48 @@ public:
 		return Piece::Color::NONE;
 	}
 
-	void leftClick() {
+	void switchTurn() {
+		if (currentTurn == Piece::Color::BLUE) {
+			currentTurn = Piece::Color::RED;
+		}
+		else if (currentTurn == Piece::Color::RED) {
+			currentTurn = Piece::Color::BLUE;
+		}
+	}
 
+	void leftClick() {
+		leftClickStatus = true;
 	}
 
 	void rightClick() {
+		rightClickStatus = true;
+	}
+	
+	//returns int positions of where the pieces are if they are selected
+	glm::vec3 checkSelectPiece() {
+		for (int x = 0; x < 4; x++) {
+			for (int y = 0; y < 4; y++) {
+				for (int z = 0; z < 4; z++) {
+					//if the piece is not filled already and is being intersected by the line
+					if (checkLinePieceIntersection(board.data[x][y][z], mouseRay)) {
+						return glm::vec3(x, y, z);
+					}
+				}
+			}
+		}
 
+		return glm::vec3(-1);
+	}
+
+	//find the distance between the piece targeted and the camera. Then multiply this by the normalized vector of the line from the camera position and compare if they are close enough.
+	bool checkLinePieceIntersection(Piece piece, glm::vec3 line) {
+		float dist = glm::length(camera->pos - piece.asset->position);
+		glm::vec3 linePoint = line * dist + camera->pos;
+
+		if (glm::length(linePoint - piece.asset->position) < piece.colliderRadius) {
+			return true;
+		}
+		return false;
 	}
 
 	//take the camera 
@@ -460,6 +550,36 @@ public:
 	//utility
 	void printVector(glm::vec3 vec) {
 		std::cout << vec.x << " " << vec.y << " " << vec.z << std::endl;
+	}
+
+	// Creates a task that completes after the specified delay.
+	concurrency::task<void> complete_after(unsigned int timeout)
+	{
+		// A task completion event that is set when a timer fires.
+		concurrency::task_completion_event<void> tce;
+
+		// Create a non-repeating timer.
+		auto fire_once = new concurrency::timer<int>(timeout, 0, nullptr, false);
+		// Create a call object that sets the completion event after the timer fires.
+		auto callback = new concurrency::call<int>([tce](int)
+		{
+			tce.set();
+		});
+
+		// Connect the timer to the callback and start the timer.
+		fire_once->link_target(callback);
+		fire_once->start();
+
+		// Create a task that completes after the completion event is set.
+		concurrency::task<void> event_set(tce);
+
+		// Create a continuation task that cleans up resources and
+		// and return that continuation task.
+		return event_set.then([callback, fire_once]()
+		{
+			delete callback;
+			delete fire_once;
+		});
 	}
 };
 
