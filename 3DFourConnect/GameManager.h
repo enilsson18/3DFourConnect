@@ -38,6 +38,7 @@ public:
 	Stage stage;
 
 	Piece previewPiece;
+	Piece outlinePiece;
 
 	//testing
 	Piece testPiece;
@@ -55,6 +56,12 @@ public:
 		currentTurn = Piece::Color::RED;
 
 		stage = Stage::PLAY;
+
+		//play setup
+		if (stage == Stage::PLAY) {
+			outlinePiece = Piece(&graphics, Piece::Color::OUTLINE, glm::vec3(0));
+			outlinePiece.asset->visible = false;
+		}
 
 		//testing setup
 		if (stage == Stage::TESTING) {
@@ -89,7 +96,7 @@ public:
 		if (stage == Stage::TESTING) {
 			(*camera).processInput((*graphics).window);
 			(*camera).lookAtTarget(board.getCenter());
-			//testPiece.asset.setPosition((*camera).pos + mouseRay * 1.0f);
+			testPiece.asset->setPosition((*camera).pos + mouseRay * 20.0f);
 		}
 	}
 
@@ -424,11 +431,13 @@ public:
 		float nearPlaneWidth = (tan((16.0f / 9.0f) * (*camera).fov * (3.1415926535 / 180)) / (*camera).nearPlane) * 2;
 		float nearPlaneHeight = (tan((*camera).fov * (3.1415926535 / 180)) / (*camera).nearPlane) * 2;
 
-		glm::vec3 dist = 20*(*camera).nearPlane * (*camera).Front;
+		glm::vec3 dist = 1*(*camera).nearPlane * (*camera).Front;
 		glm::vec3 xOffset = (*camera).Right * float(x * (nearPlaneWidth / *(*graphics).SCR_WIDTH) - (nearPlaneWidth/2));
 		glm::vec3 yOffset = -(*camera).Up * float(y * (nearPlaneHeight / *(*graphics).SCR_HEIGHT) - (nearPlaneHeight/2));
 
-		mouseRay = (dist + xOffset + yOffset) * glm::vec3(1,1,1);
+		//these numbers are scaling values to compensate for the oblong window and the clipping pane distance
+		glm::vec3 scaler = glm::vec3(1/7.7, (1/2.425), 1);
+		mouseRay = glm::normalize(dist*scaler.z + xOffset*scaler.x + yOffset*scaler.y);
 
 		//std::cout << float(x / *(*graphics).SCR_WIDTH) << std::endl;
 		//printVector((*camera).pos + mouseRay * 20.0f);
@@ -437,22 +446,15 @@ public:
 	}
 
 	void bindPreviewPiece() {
-		std::cout << "mem addr b4: " << &previewPiece.asset << std::endl;
 		//update position
 		glm::vec3 displacement = glm::vec3(9.0f, 4.5f, 15.0f);
 
-		printVector(previewPiece.asset.position);
-
-		previewPiece.asset.setPosition((*camera).pos + displacement.z * (*camera).Front + displacement.x * (*camera).Right + displacement.y * (*camera).Up);
+		previewPiece.asset->setPosition((*camera).pos + displacement.z * (*camera).Front + displacement.x * (*camera).Right + displacement.y * (*camera).Up);
 		//printVector((*camera).pos);
 
 		//update rotation
 		glm::vec3 rotationDisplacement = glm::vec3(1.0f, 2.0f, 3.0f);
-		previewPiece.asset.setRotation(previewPiece.asset.rotation + rotationDisplacement);
-
-		printVector((*(*graphics).scene[1]).position);
-		
-		std::cout << "mem addr af: " << (*graphics).scene[1] << std::endl;
+		previewPiece.asset->setRotation(previewPiece.asset->rotation + rotationDisplacement);
 	}
 
 	//utility

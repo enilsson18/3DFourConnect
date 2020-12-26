@@ -33,6 +33,7 @@
 //file paths
 const char* RedModelPath = "C:\\Users\\Erik\\source\\repos\\3DFourConnect\\3DFourConnect\\resources\\objects\\redball\\redball.obj";
 const char* BlueModelPath = "C:\\Users\\Erik\\source\\repos\\3DFourConnect\\3DFourConnect\\resources\\objects\\blueball\\blueball.obj";
+const char* OutlineModelPath = "C:\\Users\\Erik\\source\\repos\\3DFourConnect\\3DFourConnect\\resources\\objects\\outlineball\\outlineball.obj";
 const char* BoardModelPath = "C:\\Users\\Erik\\source\\repos\\3DFourConnect\\3DFourConnect\\resources\\objects\\3dfourconnect\\3dfourconnectFIXED.obj";
 const char* BackpackModelPath = "C:\\Users\\Erik\\source\\repos\\3DFourConnect\\3DFourConnect\\resources\\objects\\testing\\backpack\\backpack.obj";
 
@@ -58,6 +59,7 @@ int main() {
 	graphics.addModel(BoardModelPath);
 	graphics.addModel(RedModelPath);
 	graphics.addModel(BlueModelPath);
+	graphics.addModel(OutlineModelPath);
 
 	//make the board and game manager
 	GameManager gameManager(graphics, graphics.camera, glm::vec3(0, 0, 0));
@@ -76,8 +78,8 @@ int main() {
 	//graphics.textManager.addText("This is sample text", 25.0f, 25.0f, 1.0f, glm::vec3(0.5, 0.8f, 0.2f));
 
 	//add test piece
-	//gameManager.board.addPiece(Piece::Color::BLUE, 0, 3, 0);
-	//gameManager.board.addPiece(Piece::Color::RED, 1, 3, 0);
+	gameManager.board.addPiece(Piece::Color::BLUE, 0, 3, 0);
+	gameManager.board.addPiece(Piece::Color::RED, 1, 3, 0);
 
 	int fpsCount = 0;
 	int fpsCounter = 0;

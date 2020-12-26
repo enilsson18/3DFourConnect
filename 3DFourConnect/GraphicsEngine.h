@@ -186,17 +186,12 @@ public:
 	//add refrences to assets
 	void addAsset(Asset *asset) {
 		scene.push_back(asset);
-		std::cout << "final " << scene[scene.size()-1] << std::endl;
-
-		for (int i = 0; i < scene.size(); i++) {
-			std::cout << "Draw Name: " << (*(*scene[i]).model).name << std::endl;
-		}
 	}
 
 	//remove assets
-	void removeAsset(Asset &asset) {
+	void removeAsset(Asset *asset) {
 		for (int i = 0; i < scene.size(); i++) {
-			if (scene[i] == &asset) {
+			if (scene[i] == asset) {
 				scene.erase(scene.begin() + i);
 				break;
 			}
@@ -239,25 +234,25 @@ public:
 
 		//draw assets with the corresponding model
 		for (int i = 0; i < scene.size(); i++) {
-			//drawTestCube(glm::vec3(0));
+			if (scene[i]->visible) {
+				//drawTestCube(glm::vec3(0));
 
-			shader.use();
+				shader.use();
 
-			glm::mat4 projection = camera.projection;
-			glm::mat4 view = camera.update();
-			shader.setMat4("projection", projection);
-			shader.setMat4("view", view);
+				glm::mat4 projection = camera.projection;
+				glm::mat4 view = camera.update();
+				shader.setMat4("projection", projection);
+				shader.setMat4("view", view);
 
-			glm::mat4 model = glm::mat4(1.0f);
-			model = glm::translate(model, scene[i]->position);
-			//std::cout << scene[i]->position.x << std::endl;
-			model = glm::rotate(model, glm::radians(scene[i]->rotation.x), glm::vec3(1.0, 0.0, 0.0));
-			model = glm::rotate(model, glm::radians(scene[i]->rotation.y), glm::vec3(0.0, 1.0, 0.0));
-			model = glm::rotate(model, glm::radians(scene[i]->rotation.z), glm::vec3(0.0, 0.0, 1.0));
-			model = glm::scale(model, scene[i]->scale);	// it's a bit too big for our scene, so scale it down
-			shader.setMat4("model", model);
-			//std::cout << "Draw Name: " << scene[i]->model->name << std::endl;
-			scene[i]->model->Draw(shader, camera);
+				glm::mat4 model = glm::mat4(1.0f);
+				model = glm::translate(model, scene[i]->position);
+				model = glm::rotate(model, glm::radians(scene[i]->rotation.x), glm::vec3(1.0, 0.0, 0.0));
+				model = glm::rotate(model, glm::radians(scene[i]->rotation.y), glm::vec3(0.0, 1.0, 0.0));
+				model = glm::rotate(model, glm::radians(scene[i]->rotation.z), glm::vec3(0.0, 0.0, 1.0));
+				model = glm::scale(model, scene[i]->scale);	// it's a bit too big for our scene, so scale it down
+				shader.setMat4("model", model);
+				scene[i]->model->Draw(shader, camera);
+			}
 		}
 
 		//render text elements

@@ -22,12 +22,12 @@
 class Piece {
 public:
 	GraphicsEngine *graphics;
-	Asset asset;
+	Asset *asset;
 
 	float colliderRadius = 0.3f;
 
 	//whether the piece is blue or red
-	enum Color { NONE = 0,  RED = 1, BLUE = 2 };
+	enum Color { NONE = -1, OUTLINE = 0, RED = 1, BLUE = 2 };
 	Color type;
 
 	Piece() {
@@ -40,16 +40,20 @@ public:
 
 		//make models based on color, set the position, and set the pointer to the model.
 		if (this->type == Color::RED) {
-			asset = Asset((*graphics).getModel("redball.obj"), pos, glm::vec3(0), glm::vec3(1));
+			asset = new Asset((*graphics).getModel("redball.obj"), pos, glm::vec3(0), glm::vec3(1));
 			//std::cout << "red" << std::endl;
 		}
 		else if (this->type == Color::BLUE) {
-			asset = Asset((*graphics).getModel("blueball.obj"), pos, glm::vec3(0), glm::vec3(1));
+			asset = new Asset((*graphics).getModel("blueball.obj"), pos, glm::vec3(0), glm::vec3(1));
+			//std::cout << "blue" << std::endl;
+		}
+		else if (this->type == Color::OUTLINE) {
+			asset = new Asset((*graphics).getModel("outlineball.obj"), pos, glm::vec3(0), glm::vec3(1));
 			//std::cout << "blue" << std::endl;
 		}
 
-		std::cout << "original " << &asset << std::endl;
-		(*graphics).addAsset(&asset);
+		//std::cout << "original " << asset << std::endl;
+		(*graphics).addAsset(asset);
 	}
 };
 
