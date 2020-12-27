@@ -25,8 +25,6 @@
 //other pieces
 #include "Piece.h"
 
-const char* BoardPath = "C:\\Users\\Erik\\source\\repos\\3DFourConnect\\3DFourConnect\\resources\\objects\\3dfourconnect\\3dfourconnectFIXED.obj";
-
 class Board {
 public:
 	GraphicsEngine *graphics;

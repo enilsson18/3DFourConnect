@@ -19,24 +19,25 @@ c:\users\erik\source\repos\3dfourconnect\3dfourconnect\camera.h(208): warning C4
 c:\users\erik\source\repos\3dfourconnect\3dfourconnect\camera.h(209): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
 c:\users\erik\source\repos\3dfourconnect\3dfourconnect\mesh.h(91): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
 c:\users\erik\source\repos\3dfourconnect\3dfourconnect\mesh.h(124): warning C4267: 'argument': conversion from 'size_t' to 'GLsizei', possible loss of data
-c:\users\erik\source\repos\3dfourconnect\3dfourconnect\gamemanager.h(158): warning C4305: 'initializing': truncation from 'double' to 'float'
-c:\users\erik\source\repos\3dfourconnect\3dfourconnect\gamemanager.h(159): warning C4305: '=': truncation from 'double' to 'float'
-c:\users\erik\source\repos\3dfourconnect\3dfourconnect\gamemanager.h(163): warning C4554: '|': check operator precedence for possible error; use parentheses to clarify precedence
+c:\users\erik\source\repos\3dfourconnect\3dfourconnect\graphicsengine.h(253): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+c:\users\erik\source\repos\3dfourconnect\3dfourconnect\gamemanager.h(162): warning C4305: 'initializing': truncation from 'double' to 'float'
+c:\users\erik\source\repos\3dfourconnect\3dfourconnect\gamemanager.h(163): warning C4305: '=': truncation from 'double' to 'float'
 c:\users\erik\source\repos\3dfourconnect\3dfourconnect\gamemanager.h(167): warning C4554: '|': check operator precedence for possible error; use parentheses to clarify precedence
 c:\users\erik\source\repos\3dfourconnect\3dfourconnect\gamemanager.h(171): warning C4554: '|': check operator precedence for possible error; use parentheses to clarify precedence
 c:\users\erik\source\repos\3dfourconnect\3dfourconnect\gamemanager.h(175): warning C4554: '|': check operator precedence for possible error; use parentheses to clarify precedence
-c:\users\erik\source\repos\3dfourconnect\3dfourconnect\gamemanager.h(521): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
-c:\users\erik\source\repos\3dfourconnect\3dfourconnect\gamemanager.h(522): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
-c:\users\erik\source\repos\3dfourconnect\3dfourconnect\main.cpp(109): warning C4244: 'initializing': conversion from '_Rep' to 'int', possible loss of data
+c:\users\erik\source\repos\3dfourconnect\3dfourconnect\gamemanager.h(179): warning C4554: '|': check operator precedence for possible error; use parentheses to clarify precedence
+c:\users\erik\source\repos\3dfourconnect\3dfourconnect\gamemanager.h(533): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+c:\users\erik\source\repos\3dfourconnect\3dfourconnect\gamemanager.h(534): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+c:\users\erik\source\repos\3dfourconnect\3dfourconnect\main.cpp(133): warning C4244: 'initializing': conversion from '_Rep' to 'int', possible loss of data
           with
           [
               _Rep=__int64
           ]
-c:\users\erik\source\repos\3dfourconnect\3dfourconnect\main.cpp(114): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
+c:\users\erik\source\repos\3dfourconnect\3dfourconnect\main.cpp(138): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
 LINK : warning LNK4098: defaultlib 'MSVCRTD' conflicts with use of other libs; use /NODEFAULTLIB:library
   Generating code
-  1 of 1433 functions (<0.1%) were compiled, the rest were copied from previous compilation.
-    0 functions were new in current compilation
-    1 functions had inline decision re-evaluated but remain unchanged
+  118 of 1503 functions ( 7.9%) were compiled, the rest were copied from previous compilation.
+    6 functions were new in current compilation
+    5 functions had inline decision re-evaluated but remain unchanged
   Finished generating code
   3DFourConnect.vcxproj -> C:\Users\Erik\source\repos\3DFourConnect\x64\Release\3DFourConnect.exe

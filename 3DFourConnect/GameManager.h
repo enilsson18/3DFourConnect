@@ -11,9 +11,9 @@
 
 #include <shader.h>
 
-#include <ppl.h>
-#include <ppltasks.h>
-#include <agents.h>
+#include <chrono>
+#include <thread>
+#include <future>
 #include <iostream>
 
 #include "Text.h"
@@ -124,21 +124,25 @@ public:
 
 			//check win case
 			Piece::Color win = checkWin();
-			if (win == Piece::Color::BLUE) {
-				//cout << "BLUE WINS!" << endl;
-				graphics->textManager.addText("Blue Wins!", 25.0f, 25.0f, 1.0f, glm::vec3(0.5, 0.8f, 0.2f));
-				board.clearBoard();
-			}
-			else if (win == Piece::Color::RED) {
-				//cout << "RED WINS!" << endl;
-				graphics->textManager.addText("Red Wins!", 25.0f, 25.0f, 1.0f, glm::vec3(0.5, 0.8f, 0.2f));
-				board.clearBoard();
-			}
-			//nobody wins
-			else if (board.fullBoard()) {
-				//cout << "NOBODY WINS" << endl;
-				graphics->textManager.addText("Nobody Wins!", 25.0f, 25.0f, 1.0f, glm::vec3(0.5, 0.8f, 0.2f));
-				//complete_after()
+			if (win != Piece::Color::NONE){
+				string text;
+
+				cout << endl;
+				if (win == Piece::Color::BLUE) {
+					cout << "BLUE WINS!" << endl;
+					text = "Blue Wins!";
+				}
+				else if (win == Piece::Color::RED) {
+					cout << "RED WINS!" << endl;
+					text = "Red Wins!";
+				}
+				//nobody wins
+				else if (board.fullBoard()) {
+					cout << "NOBODY WINS" << endl;
+					text = "Nobody Wins!";
+				}
+
+				//graphics->textManager.addText(text, 25.0f, 25.0f, 1.0f, glm::vec3(0.5, 0.8f, 0.2f));
 				board.clearBoard();
 			}
 		}
@@ -490,29 +494,37 @@ public:
 	
 	//returns int positions of where the pieces are if they are selected
 	glm::vec3 checkSelectPiece() {
+		float closestLength = -1;
+		glm::vec3 closestPos = glm::vec3(-1);
 		for (int x = 0; x < 4; x++) {
 			for (int y = 0; y < 4; y++) {
 				for (int z = 0; z < 4; z++) {
-					//if the piece is not filled already and is being intersected by the line
-					if (checkLinePieceIntersection(board.data[x][y][z], mouseRay)) {
-						return glm::vec3(x, y, z);
+					//if the piece is not filled already and is being intersected by the line get the distance between the line and the piece
+					float length = checkLinePieceIntersection(board.data[x][y][z], mouseRay);
+
+					//if a piece is selected (not -1) then add it if it is either the closest or the first selected piece.
+					if (length != -1 && (closestLength == -1 || length < closestLength)) {
+						closestLength = length;
+						closestPos = glm::vec3(x, y, z);
 					}
 				}
 			}
 		}
 
-		return glm::vec3(-1);
+		return closestPos;
 	}
 
 	//find the distance between the piece targeted and the camera. Then multiply this by the normalized vector of the line from the camera position and compare if they are close enough.
-	bool checkLinePieceIntersection(Piece piece, glm::vec3 line) {
+	//returns the distance
+	float checkLinePieceIntersection(Piece piece, glm::vec3 line) {
 		float dist = glm::length(camera->pos - piece.asset->position);
 		glm::vec3 linePoint = line * dist + camera->pos;
 
-		if (glm::length(linePoint - piece.asset->position) < piece.colliderRadius) {
-			return true;
+		float vecLength = glm::length(linePoint - piece.asset->position);
+		if (vecLength < piece.colliderRadius) {
+			return vecLength;
 		}
-		return false;
+		return -1;
 	}
 
 	//take the camera 
@@ -526,7 +538,7 @@ public:
 		glm::vec3 yOffset = -(*camera).Up * float(y * (nearPlaneHeight / *(*graphics).SCR_HEIGHT) - (nearPlaneHeight/2));
 
 		//these numbers are scaling values to compensate for the oblong window and the clipping pane distance
-		glm::vec3 scaler = glm::vec3(1/7.7, (1/2.425), 1);
+		glm::vec3 scaler = glm::vec3((1/7.7)/100, (1/2.425)/100, 1);
 		mouseRay = glm::normalize(dist*scaler.z + xOffset*scaler.x + yOffset*scaler.y);
 
 		//std::cout << float(x / *(*graphics).SCR_WIDTH) << std::endl;
@@ -550,36 +562,6 @@ public:
 	//utility
 	void printVector(glm::vec3 vec) {
 		std::cout << vec.x << " " << vec.y << " " << vec.z << std::endl;
-	}
-
-	// Creates a task that completes after the specified delay.
-	concurrency::task<void> complete_after(unsigned int timeout)
-	{
-		// A task completion event that is set when a timer fires.
-		concurrency::task_completion_event<void> tce;
-
-		// Create a non-repeating timer.
-		auto fire_once = new concurrency::timer<int>(timeout, 0, nullptr, false);
-		// Create a call object that sets the completion event after the timer fires.
-		auto callback = new concurrency::call<int>([tce](int)
-		{
-			tce.set();
-		});
-
-		// Connect the timer to the callback and start the timer.
-		fire_once->link_target(callback);
-		fire_once->start();
-
-		// Create a task that completes after the completion event is set.
-		concurrency::task<void> event_set(tce);
-
-		// Create a continuation task that cleans up resources and
-		// and return that continuation task.
-		return event_set.then([callback, fire_once]()
-		{
-			delete callback;
-			delete fire_once;
-		});
 	}
 };
 

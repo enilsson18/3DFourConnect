@@ -16,10 +16,6 @@
 
 #include "Camera.h"
 
-#include "BlockType.h"
-#include "Block.h"
-#include "Surface.h"
-
 #include <vector>
 
 #include <string>
@@ -44,8 +40,17 @@ public:
 
 	int width, height, nrChannels;
 
-	Skybox() {
+	//only enable if textures are loaded for the skybox
+	bool enabled;
 
+	Skybox() {
+		enabled = false;
+	}
+
+	Skybox(const char* vs, const char* fs) {
+		shader = Shader(vs, fs);
+
+		enabled = false;
 	}
 
 	//include shader files and face images
@@ -56,8 +61,9 @@ public:
 	//bottom
 	//front
 	//back
-	void setup(const char* vs, const char* fs, std::vector<const char*> faces) {
+	Skybox(const char* vs, const char* fs, std::vector<const char*> faces) {
 		shader = Shader(vs, fs);
+		enabled = false;
 
 		loadSkyBox(faces);
 	}
@@ -150,24 +156,28 @@ public:
 
 		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
 		glEnableVertexAttribArray(0);
+
+		enabled = true;
 	}
 
 	void render(glm::mat4 proj, glm::mat4 view) {
-		glDepthMask(GL_FALSE);
+		if (enabled) {
+			glDepthMask(GL_FALSE);
 
-		//select proper cubemap to use
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_CUBE_MAP, textureID);
+			//select proper cubemap to use
+			glActiveTexture(GL_TEXTURE0);
+			glBindTexture(GL_TEXTURE_CUBE_MAP, textureID);
 
-		shader.use();
+			shader.use();
 
-		shader.setMat4("projection", proj);
-		shader.setMat4("view", glm::mat4(glm::mat3(view)));
+			shader.setMat4("projection", proj);
+			shader.setMat4("view", glm::mat4(glm::mat3(view)));
 
-		glBindVertexArray(VAO);
-		glBindTexture(GL_TEXTURE_CUBE_MAP, textureID);
-		glDrawArrays(GL_TRIANGLES, 0, 36);
-		glDepthMask(GL_TRUE);
+			glBindVertexArray(VAO);
+			glBindTexture(GL_TEXTURE_CUBE_MAP, textureID);
+			glDrawArrays(GL_TRIANGLES, 0, 36);
+			glDepthMask(GL_TRUE);
+		}
 	}
 };
 

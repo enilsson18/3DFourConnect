@@ -68,7 +68,7 @@ public:
 		lastY = 900.0f / 2.0;
 		fov = 45.0f;
 
-		nearPlane = 1.0f;
+		nearPlane = 0.1f;
 		farPlane = 1000.0f;
 
 		//pov control info

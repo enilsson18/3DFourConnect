@@ -37,6 +37,27 @@ const char* OutlineModelPath = "C:\\Users\\Erik\\source\\repos\\3DFourConnect\\3
 const char* BoardModelPath = "C:\\Users\\Erik\\source\\repos\\3DFourConnect\\3DFourConnect\\resources\\objects\\3dfourconnect\\3dfourconnectFIXED.obj";
 const char* BackpackModelPath = "C:\\Users\\Erik\\source\\repos\\3DFourConnect\\3DFourConnect\\resources\\objects\\testing\\backpack\\backpack.obj";
 
+//skybox paths
+std::vector<const char*> cloudySkybox
+{
+	"resources/textures/CloudySkyBox/cubemap_1.jpg",
+	"resources/textures/CloudySkyBox/cubemap_3.jpg",
+	"resources/textures/CloudySkyBox/cubemap_4.jpg",
+	"resources/textures/CloudySkyBox/cubemap_5.jpg",
+	"resources/textures/CloudySkyBox/cubemap_0.jpg",
+	"resources/textures/CloudySkyBox/cubemap_2.jpg",
+};
+
+std::vector<const char*> galexySkybox
+{
+	"resources/textures/SpaceSkyBox/rightImage.png",
+	"resources/textures/SpaceSkyBox/leftImage.png",
+	"resources/textures/SpaceSkyBox/upImage.png",
+	"resources/textures/SpaceSkyBox/downImage.png",
+	"resources/textures/SpaceSkyBox/frontImage.png",
+	"resources/textures/SpaceSkyBox/backImage.png",
+};
+
 //prototypes
 //control callback for clicking the mouse
 void mouse_button_callback_custom(GLFWwindow* window, int button, int action, int mods);
@@ -61,6 +82,9 @@ int main() {
 	graphics.addModel(RedModelPath);
 	graphics.addModel(BlueModelPath);
 	graphics.addModel(OutlineModelPath);
+
+	//set skybox
+	graphics.setSkybox(cloudySkybox);
 
 	//make the board and game manager
 	GameManager gameManager(graphics, graphics.camera, glm::vec3(0, 0, 0));

@@ -22,6 +22,7 @@
 #include "Asset.h"
 #include "Model.h"
 #include "Mesh.h"
+#include "Skybox.h"
 #include "Text.h"
 
 //prototypes
@@ -52,6 +53,9 @@ public:
 
 	Shader shader;
 	Shader testCubeShader;
+
+	//skybox
+	Skybox skybox;
 
 	const unsigned int *SCR_WIDTH;
 	const unsigned int *SCR_HEIGHT;
@@ -136,11 +140,16 @@ public:
 
 		//Camera
 		camera = Camera(*SCR_WIDTH, *SCR_HEIGHT, glm::vec3(0.0, 7*1.5, 20), true);
-
 		cameraPointer = &camera;
 
+		//Skybox setup
+
+		skybox = Skybox("resources/shaders/sky_box.vs", "resources/shaders/sky_box.fs");
+
+		//text cube setup
 		generateTestCube();
 
+		//local shaders
 		testCubeShader = Shader("resources/shaders/cube.vs", "resources/shaders/cube.fs");
 		shader = Shader("resources/shaders/basic_model.vs", "resources/shaders/basic_model.fs");
 	}
@@ -158,6 +167,11 @@ public:
 		else {
 			mouseMode = state;
 		}
+	}
+
+	//skybox
+	void setSkybox(std::vector<const char*> faces) {
+		skybox.loadSkyBox(faces);
 	}
 
 	//model functions
@@ -224,8 +238,10 @@ public:
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		//draw
+		//skybox for background
+		skybox.render(camera.projection, camera.update());
+
 		//testing stuff
-		
 		//generateTestCube();
 		for (int i = 0; i < 10; i++) {
 			//drawTestCube();
@@ -233,7 +249,8 @@ public:
 		
 
 		//draw assets with the corresponding model
-		for (int i = 0; i < scene.size(); i++) {
+		//draw backwards since the board is transparent and the balls and other objects need to be drawn first
+		for (int i = scene.size()-1; i >= 0; i--) {
 			if (scene[i]->visible) {
 				//drawTestCube(glm::vec3(0));
 
