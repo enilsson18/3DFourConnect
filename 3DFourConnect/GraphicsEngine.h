@@ -19,6 +19,7 @@
 
 //graphics tools
 #include "Camera.h"
+#include "Light.h"
 #include "Asset.h"
 #include "Model.h"
 #include "Mesh.h"
@@ -44,6 +45,7 @@ MouseControlState *mouseModePointer;
 Camera *cameraPointer;
 
 //add all models before you start making assets
+//a simple graphicsengine (uses multisampling x4)
 class GraphicsEngine {
 public:
 	//normal vars
@@ -56,6 +58,12 @@ public:
 
 	//skybox
 	Skybox skybox;
+
+	//light
+	Light light;
+
+	//samples for multisampling
+	int samples;
 
 	const unsigned int *SCR_WIDTH;
 	const unsigned int *SCR_HEIGHT;
@@ -79,14 +87,22 @@ public:
 	//text stuff
 	Text textManager;
 
-	//takes in window display name, screen width, screen height, The last is if you want to have custom or preset controll callbacks.
-	GraphicsEngine(const char* windowName, const unsigned int *scr_WIDTH, const unsigned int *scr_HEIGHT, bool customCallback) {
+	//takes in window display name, screen width, screen height, and number of samples per frame (1 is no multisampling). The last is if you want to have custom or preset control callbacks.
+	//MULTISAMPLING TEXTURES DOES NOT WORK. MAKE SURE TO SET SAMPLES TO 1.
+	GraphicsEngine(const char* windowName, const unsigned int *scr_WIDTH, const unsigned int *scr_HEIGHT, int samples, bool customCallback) {
+		this->samples = samples;
+
 		//window setup
 		// glfw: initialize and configure
 		glfwInit();
 		glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 		glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 		glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+
+		//multisampling
+		if (samples > 1) {
+			glfwWindowHint(GLFW_SAMPLES, samples);
+		}
 
 		SCR_WIDTH = scr_WIDTH;
 		SCR_HEIGHT = scr_HEIGHT;
@@ -123,6 +139,11 @@ public:
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
+		//multisampling
+		if (samples > 1) {
+			glEnable(GL_MULTISAMPLE);
+		}
+
 		//mouse normal callback 
 		if (!customCallback) {
 			//mouse control State default
@@ -143,15 +164,18 @@ public:
 		cameraPointer = &camera;
 
 		//Skybox setup
-
 		skybox = Skybox("resources/shaders/sky_box.vs", "resources/shaders/sky_box.fs");
 
+		//light setup
+		light = Light("resources/shaders/light.vs", "resources/shaders/light.fs");
+
 		//text cube setup
+		testCubeShader = Shader("resources/shaders/cube.vs", "resources/shaders/cube.fs");
 		generateTestCube();
 
-		//local shaders
-		testCubeShader = Shader("resources/shaders/cube.vs", "resources/shaders/cube.fs");
-		shader = Shader("resources/shaders/basic_model.vs", "resources/shaders/basic_model.fs");
+		//local shader
+		//shader = Shader("resources/shaders/basic_model.vs", "resources/shaders/basic_model.fs");
+		shader = Shader("resources/shaders/lighted_model.vs", "resources/shaders/lighted_model.fs");
 	}
 
 	//switch Mouse Modes
@@ -174,6 +198,21 @@ public:
 		skybox.loadSkyBox(faces);
 	}
 
+	Skybox* getSkybox() {
+		return &skybox;
+	}
+
+	//color is 0-1 so white is (1,1,1)
+	void setLight(glm::vec3 pos, glm::vec3 color) {
+		light.pos = pos;
+		light.color = color;
+		light.enabled = true;
+	}
+
+	Light* getLight() {
+		return &light;
+	}
+
 	//model functions
 	Model *getModel(int index) {
 		return &models[index];
@@ -193,7 +232,7 @@ public:
 
 	void addModel(string const &path) {
 		std::cout << "Added model at location: " << path << std::endl;
-		models.push_back(Model(path));
+		models.push_back(Model(path, samples));
 	}
 
 	//asset stuff
@@ -241,25 +280,37 @@ public:
 		//skybox for background
 		skybox.render(camera.projection, camera.update());
 
+		//light
+		light.render(camera.projection, camera.update());
+
 		//testing stuff
 		//generateTestCube();
 		for (int i = 0; i < 10; i++) {
 			//drawTestCube();
 		}
 		
+		//model rendering
+		shader.use();
+
+		//if the light is valid then enter lighting mode for shader
+		if (light.enabled) {
+			shader.setBool("enableLighting", true);
+
+			shader.setVec3("lightPos", light.pos);
+			shader.setVec3("lightColor", light.color);
+			shader.setFloat("lightBrightness", light.brightness);
+			shader.setFloat("lightDistance", light.distance);
+		}
 
 		//draw assets with the corresponding model
 		//draw backwards since the board is transparent and the balls and other objects need to be drawn first
 		for (int i = scene.size()-1; i >= 0; i--) {
 			if (scene[i]->visible) {
-				//drawTestCube(glm::vec3(0));
-
-				shader.use();
-
 				glm::mat4 projection = camera.projection;
 				glm::mat4 view = camera.update();
 				shader.setMat4("projection", projection);
 				shader.setMat4("view", view);
+				shader.setVec3("viewPos", camera.pos);
 
 				glm::mat4 model = glm::mat4(1.0f);
 				model = glm::translate(model, scene[i]->position);
@@ -268,6 +319,7 @@ public:
 				model = glm::rotate(model, glm::radians(scene[i]->rotation.z), glm::vec3(0.0, 0.0, 1.0));
 				model = glm::scale(model, scene[i]->scale);	// it's a bit too big for our scene, so scale it down
 				shader.setMat4("model", model);
+
 				scene[i]->model->Draw(shader, camera);
 			}
 		}

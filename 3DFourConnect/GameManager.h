@@ -34,6 +34,7 @@ public:
 
 	bool rightClickStatus;
 	bool leftClickStatus;
+	glm::vec2 mousePos;
 
 	float camFollowDistance;
 
@@ -58,6 +59,8 @@ public:
 
 		rightClickStatus = false;
 		leftClickStatus = false;
+
+		mousePos = glm::vec2(0);
 
 		//construct the game setup
 		board = Board(graphics, pos);
@@ -98,6 +101,9 @@ public:
 
 			//update vectors
 			(*camera).updateCameraVectors();
+
+			//update mouse ray
+			updateMouseRay();
 
 			//find selected pieces
 			glm::vec3 selectedPiece = checkSelectPiece();
@@ -527,19 +533,24 @@ public:
 		return -1;
 	}
 
-	//take the camera 
-	void mousePieceSelect(double x, double y) {
+	//update mouse pos
+	void mouseUpdate(double x, double y) {
+		mousePos = glm::vec2(x, y);
+	}
+
+	//find the vector ray where the mouse is looking
+	void updateMouseRay() {
 		//calculate the vector displacement of the cursor on the screen from the cameras perspective
 		float nearPlaneWidth = (tan((16.0f / 9.0f) * (*camera).fov * (3.1415926535 / 180)) / (*camera).nearPlane) * 2;
 		float nearPlaneHeight = (tan((*camera).fov * (3.1415926535 / 180)) / (*camera).nearPlane) * 2;
 
-		glm::vec3 dist = 1*(*camera).nearPlane * (*camera).Front;
-		glm::vec3 xOffset = (*camera).Right * float(x * (nearPlaneWidth / *(*graphics).SCR_WIDTH) - (nearPlaneWidth/2));
-		glm::vec3 yOffset = -(*camera).Up * float(y * (nearPlaneHeight / *(*graphics).SCR_HEIGHT) - (nearPlaneHeight/2));
+		glm::vec3 dist = 1 * (*camera).nearPlane * (*camera).Front;
+		glm::vec3 xOffset = (*camera).Right * float(mousePos.x * (nearPlaneWidth / *(*graphics).SCR_WIDTH) - (nearPlaneWidth / 2));
+		glm::vec3 yOffset = -(*camera).Up * float(mousePos.y * (nearPlaneHeight / *(*graphics).SCR_HEIGHT) - (nearPlaneHeight / 2));
 
 		//these numbers are scaling values to compensate for the oblong window and the clipping pane distance
-		glm::vec3 scaler = glm::vec3((1/7.7)/100, (1/2.425)/100, 1);
-		mouseRay = glm::normalize(dist*scaler.z + xOffset*scaler.x + yOffset*scaler.y);
+		glm::vec3 scaler = glm::vec3((1 / 7.7) / 100, (1 / 2.425) / 100, 1);
+		mouseRay = glm::normalize(dist*scaler.z + xOffset * scaler.x + yOffset * scaler.y);
 
 		//std::cout << float(x / *(*graphics).SCR_WIDTH) << std::endl;
 		//printVector((*camera).pos + mouseRay * 20.0f);

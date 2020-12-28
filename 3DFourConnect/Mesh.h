@@ -35,6 +35,15 @@ struct Material {
 	glm::vec3 diffuse;
 	glm::vec3 specular;
 	glm::vec3 ambient;
+
+	//shine is the exponent of the specular shaded equation
+	float shine;
+
+	//scales the specular strength of lighting
+	float specularStrength;
+
+	//how opaque the model is
+	float opacity;
 };
 
 class Mesh {
@@ -48,12 +57,21 @@ public:
 
 	unsigned int VAO;
 
-	Mesh(vector<Vertex> vertices, vector<unsigned int> indices, vector<Texture> textures, vector<Material> materials)
+	//average position of all the verticies
+	glm::vec3 avgPos;
+
+	//number of samples for multisampling
+	int samples;
+
+	Mesh(vector<Vertex> vertices, vector<unsigned int> indices, vector<Texture> textures, vector<Material> materials, int samples)
 	{
 		this->vertices = vertices;
 		this->indices = indices;
 		this->textures = textures;
 		this->materials = materials;
+		this->samples = samples;
+
+		avgPos = calcAvgPos();
 
 		//set the vertex buffers and its attribute pointers.
 		setupMesh();
@@ -64,10 +82,14 @@ public:
 	{
 		shader.use();
 
+		//default
+		shader.setBool("hasDiffuseTex", false);
+		shader.setBool("hasSpecularTex", false);
+		shader.setBool("hasNormalTex", false);
+		shader.setBool("hasHeightTex", false);
+
 		//bind textures
 		if (textures.size() != 0) {
-			shader.setBool("hasTextures", true);
-
 			unsigned int diffuseNr = 1;
 			unsigned int specularNr = 1;
 			unsigned int normalNr = 1;
@@ -78,23 +100,34 @@ public:
 				//retrieve texture number (the N in diffuse_textureN)
 				string number;
 				string name = textures[i].type;
-				if (name == "texture_diffuse")
+				if (name == "texture_diffuse") {
 					number = std::to_string(diffuseNr++);
-				else if (name == "texture_specular")
+					shader.setBool("hasDiffuseTex", true);
+				}
+				else if (name == "texture_specular") {
 					number = std::to_string(specularNr++); //transfer unsigned int to stream
-				else if (name == "texture_normal")
+					shader.setBool("hasSpecularTex", true);
+				}
+				else if (name == "texture_normal") {
 					number = std::to_string(normalNr++); //transfer unsigned int to stream
-				else if (name == "texture_height")
+					shader.setBool("hasNormalTex", true);
+				}
+				else if (name == "texture_height") {
 					number = std::to_string(heightNr++); //transfer unsigned int to stream
+					shader.setBool("hasHeightTex", true);
+				}
 
 				//set the sampler to the correct texture unit
 				shader.setFloat((name + number).c_str(), i);
 				//finally bind the texture
-				glBindTexture(GL_TEXTURE_2D, textures[i].id);
+				//multisampling
+				if (samples > 1) {
+					glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, textures[i].id);
+				}
+				else {
+					glBindTexture(GL_TEXTURE_2D, textures[i].id);
+				}
 			}
-		}
-		else {
-			shader.setBool("hasTextures", false);
 		}
 
 		//handle material settings
@@ -103,13 +136,17 @@ public:
 				shader.setVec3("diffuse_color", materials[i].diffuse);
 				shader.setVec3("specular_color", materials[i].specular);
 				shader.setVec3("ambient_color", materials[i].ambient);
+				shader.setFloat("specular_shine", materials[i].shine);
+				shader.setFloat("specular_strength", materials[i].specularStrength);
+				shader.setFloat("opacity", materials[i].opacity);
 			}
 		}
 		//default to set all the colors to 1 so they don't change the values
+		// (EDIT) I think there is a way for glsl to automatically have default values for these in the glsl shader code now
 		else {
-			shader.setVec3("diffuse_color", glm::vec3(1.0f));
-			shader.setVec3("specular_color", glm::vec3(1.0f));
-			shader.setVec3("ambient_color", glm::vec3(1.0f));
+			//shader.setVec3("diffuse_color", glm::vec3(1.0f));
+			//shader.setVec3("specular_color", glm::vec3(1.0f));
+			//shader.setVec3("ambient_color", glm::vec3(1.0f));
 		}
 
 		//draw mesh
@@ -168,6 +205,18 @@ private:
 		glVertexAttribPointer(4, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, Bitangent));
 
 		glBindVertexArray(0);
+	}
+
+	glm::vec3 calcAvgPos() {
+		glm::vec3 total(0.0f);
+
+		for (int i = 0; i < vertices.size(); i++) {
+			total += vertices[i].Position;
+		}
+
+		total /= vertices.size();
+
+		return total;
 	}
 };
 #endif

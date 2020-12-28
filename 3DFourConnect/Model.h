@@ -24,7 +24,7 @@
 #include <map>
 #include <iostream>
 
-unsigned int TextureFromFile(const char *path, const string &directory, bool gamma = false);
+unsigned int TextureFromFile(const char *path, const string &directory, int samples = 1, bool gamma = false);
 
 //Do not reinitialize the model
 class Model {
@@ -36,9 +36,23 @@ public:
 	string name;
 	bool gammaCorrection;
 
+	//multisampling
+	int samples;
+
+	//expects file path to 3d model with multisampling
+	Model(string const &path, int samples, bool gamma = false) : gammaCorrection(gamma)
+	{
+		this->samples = samples;
+
+		loadModel(path);
+	}
+
 	//expects file path to 3d model
 	Model(string const &path, bool gamma = false) : gammaCorrection(gamma)
 	{
+		//default 1 sample
+		this->samples = 1;
+
 		loadModel(path);
 	}
 
@@ -46,6 +60,41 @@ public:
 	void Draw(Shader &shader, Camera &camera) {
 		for (unsigned int i = 0; i < meshes.size(); i++) {
 			meshes[i].Draw(shader);
+		}
+	}
+
+	//sort the meshes before drawing based on camera position (furthest first)
+	void DrawSorted(Shader &shader, Camera &camera) {
+		vector<int> sorted = vector<int>();
+		for (unsigned int i = 0; i < meshes.size(); i++) {
+			sorted.push_back(i);
+		}
+
+		//ignore the sort if there is only 1 item anyways
+		if (meshes.size() > 1) {
+			//sort the list of components so the largest distance is first
+			bool swapped;
+			for (unsigned int i = 0; i < meshes.size(); i++) {
+				swapped = false;
+				for (unsigned int j = 0; j < meshes.size() - 1 - i; j++) {
+					if (glm::distance(meshes[sorted[j]].avgPos, camera.pos) > glm::distance(meshes[sorted[j + 1]].avgPos, camera.pos)) {
+						int temp = sorted[j];
+						sorted[j] = sorted[j + 1];
+						sorted[j + 1] = temp;
+
+						swapped = true;
+					}
+				}
+
+				//exit search
+				if (swapped == false) {
+					break;
+				}
+			}
+		}
+
+		for (unsigned int i = 0; i < sorted.size(); i++) {
+			meshes[sorted[i]].Draw(shader);
 		}
 	}
 
@@ -73,15 +122,6 @@ private:
 
 		//process ASSIMP's root node recursively
 		processNode(scene->mRootNode, scene);
-	}
-
-	//sorts transparent images
-	void sortTransparentMeshes(Camera &camera) {
-		vector<int> transparentMeshes = vector<int>();
-
-		//add all distances from the camera to the list
-		std::map<float, glm::vec3> sorted;
-
 	}
 
 	//seperate and process each mesh from the nodes in the scene
@@ -182,10 +222,25 @@ private:
 			material->Get(AI_MATKEY_COLOR_SPECULAR, specular);
 			mat.specular = glm::vec3(specular.r, specular.g, specular.b);
 
+			//specular shininess
+			float shine;
+			material->Get(AI_MATKEY_SHININESS, shine);
+			mat.shine = shine;
+
+			//specular strength
+			float specularStrength;
+			material->Get(AI_MATKEY_SHININESS_STRENGTH, specularStrength);
+			mat.specularStrength = specularStrength;
+
 			//ambient
 			aiColor3D ambient(0.0f, 0.0f, 0.0f);
 			material->Get(AI_MATKEY_COLOR_AMBIENT, ambient);
 			mat.ambient = glm::vec3(ambient.r, ambient.g, ambient.b);
+
+			//opacity
+			float opacity;
+			material->Get(AI_MATKEY_OPACITY, opacity);
+			mat.opacity = opacity;
 
 			//cout << mat.ambient.x << " " << mat.ambient.y << " " << mat.ambient.z << endl;
 
@@ -208,7 +263,7 @@ private:
 		}
 
 
-		return Mesh(vertices, indices, textures, materials);
+		return Mesh(vertices, indices, textures, materials, samples);
 	}
 
 	//unpacks the textures from assimp into the texture struct so it's more manipulatable
@@ -231,7 +286,7 @@ private:
 			if (!skip)
 			{   // if texture hasn't been loaded already, load it
 				Texture texture;
-				texture.id = TextureFromFile(str.C_Str(), directory);
+				texture.id = TextureFromFile(str.C_Str(), directory, samples);
 				texture.type = typeName;
 				texture.path = str.C_Str();
 				textures.push_back(texture);
@@ -243,7 +298,7 @@ private:
 };
 
 //method from stb_image.h
-unsigned int TextureFromFile(const char *path, const string &directory, bool gamma)
+unsigned int TextureFromFile(const char *path, const string &directory, int samples, bool gamma)
 {
 	string filename = string(path);
 	filename = directory + "\\" + filename;
@@ -264,14 +319,30 @@ unsigned int TextureFromFile(const char *path, const string &directory, bool gam
 		else if (nrComponents == 4)
 			format = GL_RGBA;
 
-		glBindTexture(GL_TEXTURE_2D, textureID);
-		glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
-		glGenerateMipmap(GL_TEXTURE_2D);
+		//multisampling (samples)x
+		if (samples > 1) {
+			glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, textureID);
+			glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, samples, format, width, height, GL_TRUE);
+			glGenerateMipmap(GL_TEXTURE_2D_MULTISAMPLE);
 
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+			glTexParameteri(GL_TEXTURE_2D_MULTISAMPLE, GL_TEXTURE_WRAP_S, GL_REPEAT);
+			glTexParameteri(GL_TEXTURE_2D_MULTISAMPLE, GL_TEXTURE_WRAP_T, GL_REPEAT);
+			glTexParameteri(GL_TEXTURE_2D_MULTISAMPLE, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+			glTexParameteri(GL_TEXTURE_2D_MULTISAMPLE, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D_MULTISAMPLE, textureID, 0);
+			cout << "here" << endl;
+		}
+		else {
+			glBindTexture(GL_TEXTURE_2D, textureID);
+			glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
+			glGenerateMipmap(GL_TEXTURE_2D);
+
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		}
 
 		stbi_image_free(data);
 	}
