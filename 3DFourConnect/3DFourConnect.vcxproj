@@ -109,7 +109,7 @@
       <ConformanceMode>true</ConformanceMode>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>freetyped.lib;assimp-vc141-mt.lib;opengl32.lib;glfw3.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>GameNetworkingSockets.lib;GameNetworkingSockets_s.lib;libcrypto.lib;libprotobuf.lib;libprotobuf-lite.lib;libprotoc.lib;libssl.lib;freetyped.lib;assimp-vc141-mt.lib;opengl32.lib;glfw3.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(ProjectDir)\..\LibResources\lib;</AdditionalLibraryDirectories>
       <AdditionalOptions>/Zc:__cplusplus %(AdditionalOptions)</AdditionalOptions>
       <SubSystem>Console</SubSystem>
@@ -145,7 +145,7 @@
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>freetyped.lib;assimp-vc141-mt.lib;opengl32.lib;glfw3.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>GameNetworkingSockets.lib;GameNetworkingSockets_s.lib;libcrypto.lib;libprotobuf.lib;libprotobuf-lite.lib;libprotoc.lib;libssl.lib;freetyped.lib;assimp-vc141-mt.lib;opengl32.lib;glfw3.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(ProjectDir)\..\LibResources\lib;</AdditionalLibraryDirectories>
       <SubSystem>Console</SubSystem>
     </Link>
@@ -154,6 +154,7 @@
     <ClInclude Include="Asset.h" />
     <ClInclude Include="Board.h" />
     <ClInclude Include="Camera.h" />
+    <ClInclude Include="Client.h" />
     <ClInclude Include="GameManager.h" />
     <ClInclude Include="GraphicsEngine.h" />
     <ClInclude Include="Light.h" />
@@ -161,14 +162,18 @@
     <ClInclude Include="Model.h" />
     <ClInclude Include="Piece.h" />
     <ClInclude Include="Quad.h" />
+    <ClInclude Include="Server.h" />
     <ClInclude Include="Skybox.h" />
     <ClInclude Include="Text.h" />
+    <ClInclude Include="Tools.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\LibResources\include\img\ImageLoader.cpp" />
     <ClCompile Include="glad.c" />
     <ClCompile Include="Local3DFourConnect.cpp" />
+    <ClCompile Include="Online3DFourConnect.cpp" />
     <ClCompile Include="TextTest.cpp" />
+    <ClCompile Include="Tools.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

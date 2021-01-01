@@ -73,7 +73,7 @@ const double fps = 60;
 
 GameManager *gM;
 
-int main() {
+int main2() {
 	//make the graphics engine (Jordan: Do not focus too much on this, it is very complicated and not relevant to the problem.
 	GraphicsEngine graphics("3D Four Connect", &SCR_WIDTH, &SCR_HEIGHT, 1, true);
 
