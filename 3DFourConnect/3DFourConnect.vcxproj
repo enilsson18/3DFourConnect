@@ -113,6 +113,7 @@
       <AdditionalLibraryDirectories>$(ProjectDir)\..\LibResources\lib;</AdditionalLibraryDirectories>
       <AdditionalOptions>/Zc:__cplusplus %(AdditionalOptions)</AdditionalOptions>
       <SubSystem>Console</SubSystem>
+      <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -148,6 +149,7 @@
       <AdditionalDependencies>GameNetworkingSockets.lib;GameNetworkingSockets_s.lib;libcrypto.lib;libprotobuf.lib;libprotobuf-lite.lib;libprotoc.lib;libssl.lib;freetyped.lib;assimp-vc141-mt.lib;opengl32.lib;glfw3.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(ProjectDir)\..\LibResources\lib;</AdditionalLibraryDirectories>
       <SubSystem>Console</SubSystem>
+      <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -170,7 +172,7 @@
   <ItemGroup>
     <ClCompile Include="..\LibResources\include\img\ImageLoader.cpp" />
     <ClCompile Include="glad.c" />
-    <ClCompile Include="Local3DFourConnect.cpp" />
+    <ClCompile Include="Local3DFourConnect.h" />
     <ClCompile Include="Online3DFourConnect.cpp" />
     <ClCompile Include="TextTest.cpp" />
     <ClCompile Include="Tools.cpp" />

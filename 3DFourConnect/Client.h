@@ -24,6 +24,8 @@
 #include <iostream>
 #include <signal.h>
 
+#include "Local3DFourConnect.h"
+
 #include "Tools.h"
 
 class Client
@@ -54,6 +56,8 @@ public:
 	}
 private:
 
+	//Local3DFourConnect game;
+
 	HSteamNetConnection m_hConnection;
 	ISteamNetworkingSockets *m_pInterface;
 
@@ -69,8 +73,8 @@ private:
 				FatalError("Error checking for messages");
 
 			// Just echo anything we get from the server
-			fwrite(pIncomingMsg->m_pData, 1, pIncomingMsg->m_cbSize, stdout);
-			fputc('\n', stdout);
+			DataPacket *data = (DataPacket*)pIncomingMsg->m_pData;
+			std::cout << data->msg.c_str() << std::endl;
 
 			// We don't need this anymore.
 			pIncomingMsg->Release();

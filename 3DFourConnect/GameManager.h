@@ -50,6 +50,10 @@ public:
 	//testing
 	Piece testPiece;
 
+	GameManager() {
+
+	}
+
 	GameManager(GraphicsEngine &graphics, Camera &camera, glm::vec3 pos) {
 		this->graphics = &graphics;
 		this->camera = &camera;

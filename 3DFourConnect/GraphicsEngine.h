@@ -28,10 +28,10 @@
 
 //prototypes
 //callbacks
-void framebuffer_size_callback(GLFWwindow* window, int width, int height);
-void mouse_callback(GLFWwindow* window, double xpos, double ypos);
-void window_focus_callback(GLFWwindow* window, int focused);
-void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
+inline void framebuffer_size_callback(GLFWwindow* window, int width, int height);
+inline void mouse_callback(GLFWwindow* window, double xpos, double ypos);
+inline void window_focus_callback(GLFWwindow* window, int focused);
+inline void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
 
 //tools
 //mouse state, POV for point of view camera and controls, MOUSE for normal mouse movement detection and no camera effect.
@@ -39,10 +39,10 @@ enum MouseControlState { POV, MOUSE, CUSTOM };
 
 //Pointer tools
 //Window Clamp Mouse
-bool *clampMousePointer;
-MouseControlState *mouseModePointer;
+inline bool *clampMousePointer;
+inline MouseControlState *mouseModePointer;
 
-Camera *cameraPointer;
+inline Camera *cameraPointer;
 
 //add all models before you start making assets
 //a simple graphicsengine (uses multisampling x4)
@@ -86,6 +86,10 @@ public:
 
 	//text stuff
 	Text textManager;
+
+	GraphicsEngine() {
+
+	}
 
 	//takes in window display name, screen width, screen height, and number of samples per frame (1 is no multisampling). The last is if you want to have custom or preset control callbacks.
 	//MULTISAMPLING TEXTURES DOES NOT WORK. MAKE SURE TO SET SAMPLES TO 1.

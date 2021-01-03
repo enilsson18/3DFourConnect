@@ -2,6 +2,11 @@
 #ifndef TOOLS_H
 #define TOOLS_H
 
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+#include <glm/gtx/string_cast.hpp>
+
 #include <assert.h>
 #include <stdio.h>
 #include <stdarg.h>
@@ -30,6 +35,18 @@ static bool g_bQuit = false;
 
 static SteamNetworkingMicroseconds g_logTimeZero;
 
+//includes the board, currently selected piece, and the scores of both players
+//score is optional and only for the server to use
+struct DataPacket
+{
+	std::string msg;
+
+	//0 is red, blue is 1
+	int board[4][4][4];
+	glm::vec3 outlinePos;
+};
+
+//static methods
 static void DebugOutput(ESteamNetworkingSocketsDebugOutputType eType, const char *pszMsg)
 {
 	SteamNetworkingMicroseconds time = SteamNetworkingUtils()->GetLocalTimestamp() - g_logTimeZero;
@@ -111,6 +128,8 @@ static void ShutdownSteamDatagramConnectionSockets()
 	SteamDatagramClient_Kill();
 #endif
 }
+
+//vars
 
 static std::mutex mutexUserInputQueue;
 static std::queue< std::string > queueUserInput;

@@ -93,7 +93,7 @@ private:
 
 	void SendStringToClient(HSteamNetConnection conn, const char *str)
 	{
-		m_pInterface->SendMessageToConnection(conn, str, (uint32)strlen(str), k_nSteamNetworkingSend_Reliable, nullptr);
+		//m_pInterface->SendMessageToConnection(conn, str, (uint32)strlen(str), k_nSteamNetworkingSend_Reliable, nullptr);
 	}
 
 	void SendStringToAllClients(const char *str, HSteamNetConnection except = k_HSteamNetConnection_Invalid)
@@ -166,6 +166,18 @@ private:
 			{
 				g_bQuit = true;
 				Printf("Shutting down server");
+				break;
+			}
+			if (strcmp(cmd.c_str(), "/test") == 0)
+			{
+				DataPacket data;
+				data.msg = "hello";
+				Printf("Sent Test Messages");
+
+				for (auto &c : m_mapClients)
+				{
+					m_pInterface->SendMessageToConnection(c.first, &data, (uint32)sizeof(data), k_nSteamNetworkingSend_Reliable, nullptr);
+				}
 				break;
 			}
 

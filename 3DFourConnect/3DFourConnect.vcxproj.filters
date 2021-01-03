@@ -80,14 +80,14 @@
     <ClCompile Include="TextTest.cpp">
       <Filter>Source Files\Graphics Tools</Filter>
     </ClCompile>
-    <ClCompile Include="Local3DFourConnect.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Online3DFourConnect.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Tools.cpp">
       <Filter>Source Files\Networking</Filter>
+    </ClCompile>
+    <ClCompile Include="Local3DFourConnect.h">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

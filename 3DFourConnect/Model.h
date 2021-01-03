@@ -24,7 +24,7 @@
 #include <map>
 #include <iostream>
 
-unsigned int TextureFromFile(const char *path, const string &directory, int samples = 1, bool gamma = false);
+inline unsigned int TextureFromFile(const char *path, const string &directory, int samples = 1, bool gamma = false);
 
 //Do not reinitialize the model
 class Model {

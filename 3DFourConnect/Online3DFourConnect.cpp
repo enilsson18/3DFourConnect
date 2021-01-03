@@ -23,6 +23,8 @@
 #include <iostream>
 #include <signal.h>
 
+#include "Local3DFourConnect.h"
+
 #include "Tools.h"
 #include "Server.h"
 #include "Client.h"
@@ -52,6 +54,7 @@ int main(int argc, const char *argv[])
 {
 	bool bServer = false;
 	bool bClient = false;
+	bool bLocal = false;
 	int nPort = DEFAULT_SERVER_PORT;
 	SteamNetworkingIPAddr addrServer; addrServer.Clear();
 
@@ -99,11 +102,11 @@ int main(int argc, const char *argv[])
 		std::string type = "";
 		std::string additionalInfo = "";
 
-		std::cout << "No startup arguments were found. Please enter \"server\" (Server Host) or \"client\" (Connect To Server)." << std::endl;
-		while (type != "client" && type != "server") {
+		std::cout << "No startup arguments were found. Please enter \"server\" (Server Host), \"client\" (Connect To Server), or \"local\" (Play On Same Computer)." << std::endl;
+		while (type != "client" && type != "server" && type != "local") {
 			std::cin >> type;
 
-			if (type != "client" && type != "server") {
+			if (type != "client" && type != "server" && type != "local") {
 				std::cout << "Invalid arguements were given. Please say either \"server\" or \"client\"." << std::endl;
 			}
 		}
@@ -130,16 +133,24 @@ int main(int argc, const char *argv[])
 				nPort = std::stoi(additionalInfo);
 			}
 		}
+
+		if (type == "local") {
+			bLocal = true;
+		}
 	}
 
-	if (bClient == bServer || (bClient && addrServer.IsIPv6AllZeros()))
+	if ((bClient == bServer || (bClient && addrServer.IsIPv6AllZeros())) && bLocal == false)
 		PrintUsageAndExit();
 
 	// Create client and server sockets
 	InitSteamDatagramConnectionSockets();
 	LocalUserInput_Init();
 
-	if (bClient)
+	if (bLocal) {
+		Local3DFourConnect game;
+		game.run();
+	}
+	else if (bClient)
 	{
 		Client client;
 		client.Run(addrServer);
