@@ -28,11 +28,24 @@
 
 #include "Tools.h"
 
+//prototypes
+void placePieceCallback(Piece::Color color, glm::vec3 pos);
+
+void* clientPtr;
+
 class Client
 {
 public:
 	void Run(const SteamNetworkingIPAddr &serverAddr)
 	{
+		//setup local game stuff
+		clientPtr = this;
+
+		game.gameManager.setPiecePlaceCallback(placePieceCallback);
+
+		//disable fps counter
+		game.enableFPSCounter = false;
+
 		// Select instance to use.  For now we'll always use the default.
 		m_pInterface = SteamNetworkingSockets();
 
@@ -46,7 +59,7 @@ public:
 		if (m_hConnection == k_HSteamNetConnection_Invalid)
 			FatalError("Failed to create connection");
 
-		while (!g_bQuit)
+		while (!g_bQuit && game.run() == 1)
 		{
 			PollIncomingMessages();
 			PollConnectionStateChanges();
@@ -54,9 +67,42 @@ public:
 			std::this_thread::sleep_for(std::chrono::milliseconds(10));
 		}
 	}
+
+	void sendDataToServer(DataPacket *data) {
+		m_pInterface->SendMessageToConnection(m_hConnection, data, (uint32)sizeof(*data), k_nSteamNetworkingSend_Reliable, nullptr);
+	}
+
+	//game stuff
+	//convert the pieces on the board to data 1's and 2's to represent red and blue respectivley.
+	//returns a datapacket with the int array converted to numbers
+	DataPacket convertBoardToPacket() {
+		DataPacket data;
+		data.type = DataPacket::MsgType::GAME_DATA;
+
+		for (int x = 0; x < 4; x++) {
+			for (int y = 0; y < 4; y++) {
+				for (int z = 0; z < 4; z++) {
+					if (game.gameManager.board.data[x][y][z].type == Piece::Color::NONE) {
+						data.board[x][y][z] = 0;
+					}
+					if (game.gameManager.board.data[x][y][z].type == Piece::Color::RED) {
+						data.board[x][y][z] = 1;
+					}
+					if (game.gameManager.board.data[x][y][z].type == Piece::Color::BLUE) {
+						data.board[x][y][z] = 2;
+					}
+				}
+			}
+		}
+
+		return data;
+	}
+
 private:
 
-	//Local3DFourConnect game;
+	string filepath;
+
+	Local3DFourConnect game;
 
 	HSteamNetConnection m_hConnection;
 	ISteamNetworkingSockets *m_pInterface;
@@ -73,8 +119,23 @@ private:
 				FatalError("Error checking for messages");
 
 			// Just echo anything we get from the server
+			//we trust anything coming from the server so just set the current board to whatever this is
 			DataPacket *data = (DataPacket*)pIncomingMsg->m_pData;
-			std::cout << data->msg.c_str() << std::endl;
+			switch (data->type) {
+				//connection info
+				case DataPacket::MsgType::CONNECTION_STATUS: {
+					std::cout << "recieved connection data" << std::endl;
+				}
+														 //attempting to place a piece
+				case DataPacket::MsgType::GAME_DATA: {
+					std::cout << "Recieved game data from server: " << std::endl;
+
+					game.gameManager.board.setBoardToData(data);
+				}
+				default: {
+					std::cout << "Recieved data of no known type" << std::endl;
+				}
+			}
 
 			// We don't need this anymore.
 			pIncomingMsg->Release();
@@ -101,8 +162,24 @@ private:
 				break;
 			}
 
+			//reset the game board
+			if (strcmp(cmd.c_str(), "/clear") == 0) {
+				DataPacket data;
+				data.type = DataPacket::MsgType::GAME_DATA;
+
+				for (int x = 0; x < 4; x++) {
+					for (int y = 0; y < 4; y++) {
+						for (int z = 0; z < 4; z++) {
+							data.board[x][y][z] = 0;
+						}
+					}
+				}
+
+				sendDataToServer(&data);
+			}
+
 			// Anything else, just send it to the server and let them parse it
-			m_pInterface->SendMessageToConnection(m_hConnection, cmd.c_str(), (uint32)cmd.length(), k_nSteamNetworkingSend_Reliable, nullptr);
+			//m_pInterface->SendMessageToConnection(m_hConnection, cmd.c_str(), (uint32)cmd.length(), k_nSteamNetworkingSend_Reliable, nullptr);
 		}
 	}
 
@@ -177,5 +254,19 @@ private:
 		m_pInterface->RunCallbacks();
 	}
 };
+
+void placePieceCallback(Piece::Color color, glm::vec3 pos) {
+	Client *client = (Client*)clientPtr;
+	//if it is the clients turn
+
+	//get the base packet
+	DataPacket data = client->convertBoardToPacket();
+	data.type = DataPacket::MsgType::GAME_DATA;
+
+	//send to server
+	client->sendDataToServer(&data);
+
+	//std::cout << "sent message to server of type" << std::endl;
+}
 
 #endif

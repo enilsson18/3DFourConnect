@@ -34,11 +34,11 @@
 #include "Piece.h"
 
 //file paths
-inline const char* RedModelPath = "C:\\Users\\Erik\\source\\repos\\3DFourConnect\\3DFourConnect\\resources\\objects\\redball\\redball.obj";
-inline const char* BlueModelPath = "C:\\Users\\Erik\\source\\repos\\3DFourConnect\\3DFourConnect\\resources\\objects\\blueball\\blueball.obj";
-inline const char* OutlineModelPath = "C:\\Users\\Erik\\source\\repos\\3DFourConnect\\3DFourConnect\\resources\\objects\\outlineball\\outlineball.obj";
-inline const char* BoardModelPath = "C:\\Users\\Erik\\source\\repos\\3DFourConnect\\3DFourConnect\\resources\\objects\\3dfourconnect\\3dfourconnectFIXED.obj";
-inline const char* BackpackModelPath = "C:\\Users\\Erik\\source\\repos\\3DFourConnect\\3DFourConnect\\resources\\objects\\testing\\backpack\\backpack.obj";
+inline const char* RedModelPath = "resources\\objects\\redball\\redball.obj";
+inline const char* BlueModelPath = "resources\\objects\\blueball\\blueball.obj";
+inline const char* OutlineModelPath = "resources\\objects\\outlineball\\outlineball.obj";
+inline const char* BoardModelPath = "resources\\objects\\3dfourconnect\\3dfourconnectFIXED.obj";
+inline const char* BackpackModelPath = "resources\\objects\\testing\\backpack\\backpack.obj";
 
 //skybox paths
 inline const std::vector<const char*> cloudySkybox
@@ -76,6 +76,7 @@ inline const double fps = 60;
 
 inline GameManager *gM;
 
+//set the static variable filepath before you create a class
 class Local3DFourConnect {
 public:
 	//make the graphics engine (Jordan: Do not focus too much on this, it is very complicated and not relevant to the problem.
@@ -83,6 +84,13 @@ public:
 
 	//make the board and game manager
 	GameManager gameManager;
+
+	int fpsCount;
+	int fpsCounter;
+
+	int gameState;
+
+	bool enableFPSCounter;
 
 	Local3DFourConnect() {
 		//make the graphics engine (Jordan: Do not focus too much on this, it is very complicated and not relevant to the problem.
@@ -120,60 +128,62 @@ public:
 		//add test piece
 		//gameManager.board.addPiece(Piece::Color::BLUE, 0, 3, 0);
 		//gameManager.board.addPiece(Piece::Color::RED, 1, 3, 0);
+
+		enableFPSCounter = true;
+
+		fpsCount = 0;
+		fpsCounter = 0;
+
+		gameState = 1;
 	}
 
-	void run() {
-		int fpsCount = 0;
-		int fpsCounter = 0;
+	int run() {
+		//start timer
+		std::chrono::system_clock::time_point now = std::chrono::system_clock::now();
 
-		int gameState = 1;
-		while (gameState == 1) {
-			//start timer
-			std::chrono::system_clock::time_point now = std::chrono::system_clock::now();
+		//input
 
-			//input
+		//update the board and game
 
-			//update the board and game
+		gameManager.update();
 
-			gameManager.update();
+		//std::cout << graphics.camera.yaw << " " << graphics.camera.pitch << std::endl;
 
-			//std::cout << graphics.camera.yaw << " " << graphics.camera.pitch << std::endl;
+		//render frame
+		gameState = graphics.renderFrame();
 
-			//render frame
-			gameState = graphics.renderFrame();
+		//end of timer sleep and normalize the clock
+		std::chrono::system_clock::time_point after = std::chrono::system_clock::now();
+		std::chrono::microseconds difference(std::chrono::time_point_cast<std::chrono::microseconds>(after) - std::chrono::time_point_cast<std::chrono::microseconds>(now));
 
-			//end of timer sleep and normalize the clock
-			std::chrono::system_clock::time_point after = std::chrono::system_clock::now();
-			std::chrono::microseconds difference(std::chrono::time_point_cast<std::chrono::microseconds>(after) - std::chrono::time_point_cast<std::chrono::microseconds>(now));
-
-			//count the fps
-			int diffCount = difference.count();
-			if (diffCount == 0) {
-				diffCount = 1;
-			}
-
-			int sleepDuration = ((1000000 / fps * 1000) - diffCount) / 1000000;
-
-			//output fps
-			fpsCount += 1;
-			fpsCounter += 1000000 / diffCount;
-
-			if (fpsCount % int(fps) == 0) {
-				if (fpsCounter) {
-					std::cout << "\rFPS: " << fpsCounter / fpsCount;
-				}
-				fpsCount = 0;
-				fpsCounter = 0;
-			}
-
-			if (sleepDuration < 0) {
-				sleepDuration = 0;
-			}
-
-			//std::cout << sleepDuration << std::endl;
-			Sleep(sleepDuration);
+		//count the fps
+		int diffCount = difference.count();
+		if (diffCount == 0) {
+			diffCount = 1;
 		}
 
+		int sleepDuration = ((1000000 / fps * 1000) - diffCount) / 1000000;
+
+		//output fps
+		fpsCount += 1;
+		fpsCounter += 1000000 / diffCount;
+
+		if (fpsCount % int(fps) == 0) {
+			if (enableFPSCounter) {
+				std::cout << "\rFPS: " << fpsCounter / fpsCount;
+			}
+			fpsCount = 0;
+			fpsCounter = 0;
+		}
+
+		if (sleepDuration < 0) {
+			sleepDuration = 0;
+		}
+
+		//std::cout << sleepDuration << std::endl;
+		Sleep(sleepDuration);
+
+		return gameState;
 	}
 };
 

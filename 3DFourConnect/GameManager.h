@@ -25,10 +25,18 @@
 #include "Board.h"
 #include "Piece.h"
 
+//prototypes
+
+//manages the graphics, controls, and game data of 3d Four Connect
 class GameManager {
 public:
-	GraphicsEngine *graphics;
-	Camera *camera;
+	//callbacks
+	void(*winCallback)(Piece::Color) = nullptr;
+	void(*placePieceCallback)(Piece::Color, glm::vec3) = nullptr;
+
+
+	GraphicsEngine *graphics = nullptr;
+	Camera *camera = nullptr;
 
 	Board board;
 
@@ -41,7 +49,7 @@ public:
 	Piece::Color currentTurn;
 	glm::vec3 mouseRay;
 
-	enum Stage { TESTING, SETUP, PLAY, END };
+	enum Stage { TESTING, SETUP, PLAY, DATA, END };
 	Stage stage;
 
 	Piece previewPiece;
@@ -50,8 +58,14 @@ public:
 	//testing
 	Piece testPiece;
 
+	//neutral game manager that is meant to mainly handle sheer events and status of the board rather than graphics and controls
+	//optimal for a server storing data
 	GameManager() {
+		board = Board();
 
+		currentTurn = Piece::Color::RED;
+
+		stage = Stage::DATA;
 	}
 
 	GameManager(GraphicsEngine &graphics, Camera &camera, glm::vec3 pos) {
@@ -88,6 +102,37 @@ public:
 	void update() {
 		//std::cout << (*graphics).scene.size() << std::endl;
 
+		//non-graphical data based game
+		if (stage == Stage::DATA) {
+			//check win case
+			Piece::Color win = checkWin();
+			if (win != Piece::Color::NONE) {
+				string text;
+
+				cout << endl;
+				if (win == Piece::Color::BLUE) {
+					cout << "BLUE WINS!" << endl;
+					text = "Blue Wins!";
+				}
+				else if (win == Piece::Color::RED) {
+					cout << "RED WINS!" << endl;
+					text = "Red Wins!";
+				}
+				//nobody wins
+				else if (board.fullBoard()) {
+					cout << "NOBODY WINS" << endl;
+					text = "Nobody Wins!";
+				}
+
+				//graphics->textManager.addText(text, 25.0f, 25.0f, 1.0f, glm::vec3(0.5, 0.8f, 0.2f));
+				if (winCallback != nullptr) {
+					winCallback(win);
+				}
+
+				board.clearBoard();
+			}
+		}
+
 		//main game info
 		if (stage == Stage::PLAY) {
 			//if the preview piece is not set then make it
@@ -123,6 +168,13 @@ public:
 				if (leftClickStatus) {
 					board.addPiece(currentTurn, (int)selectedPiece.x, (int)selectedPiece.y, (int)selectedPiece.z);
 					switchTurn();
+
+					//std::cout << "placed piece" << std::endl;
+					//callback
+					if (placePieceCallback != nullptr) {
+						//std::cout << "called callback" << std::endl;
+						placePieceCallback(board.data[(int)selectedPiece.x][(int)selectedPiece.y][(int)selectedPiece.z].type, selectedPiece);
+					}
 				}
 			}
 			else {
@@ -152,6 +204,10 @@ public:
 					text = "Nobody Wins!";
 				}
 
+				if (winCallback != nullptr) {
+					//std::cout << "callback call" << std::endl;
+					winCallback(win);
+				}
 				//graphics->textManager.addText(text, 25.0f, 25.0f, 1.0f, glm::vec3(0.5, 0.8f, 0.2f));
 				board.clearBoard();
 			}
@@ -572,6 +628,15 @@ public:
 		//update rotation
 		glm::vec3 rotationDisplacement = glm::vec3(1.0f, 2.0f, 3.0f);
 		previewPiece.asset->setRotation(previewPiece.asset->rotation + rotationDisplacement);
+	}
+
+	//set callbacks
+	void setWinCallback(void f (Piece::Color)) {
+		winCallback = f;
+	}
+
+	void setPiecePlaceCallback(void f (Piece::Color, glm::vec3)) {
+		placePieceCallback = f;
 	}
 
 	//utility

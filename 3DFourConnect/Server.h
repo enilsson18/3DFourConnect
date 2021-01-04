@@ -26,10 +26,15 @@
 
 #include "Tools.h"
 
+#include "Local3DFourConnect.h"
+
 class Server {
 public:
 	void Run(uint16 nPort)
 	{
+		//init game stuff
+		game = GameManager();
+
 		// Select instance to use.  For now we'll always use the default.
 		// But we could use SteamGameServerNetworkingSockets() on Steam.
 		m_pInterface = SteamNetworkingSockets();
@@ -53,6 +58,9 @@ public:
 			PollIncomingMessages();
 			PollConnectionStateChanges();
 			PollLocalUserInput();
+
+			game.update();
+
 			std::this_thread::sleep_for(std::chrono::milliseconds(10));
 		}
 
@@ -61,7 +69,7 @@ public:
 		for (auto it : m_mapClients)
 		{
 			// Send them one more goodbye message.  Note that we also have the
-			// connection close reason as a place to send final data.  However,
+			// connection close reason as a place to send final data. However,
 			// that's usually best left for more diagnostic/debug text not actual
 			// protocol strings.
 			SendStringToClient(it.first, "Server is shutting down.  Goodbye.");
@@ -80,6 +88,10 @@ public:
 	}
 private:
 
+	//Game vars
+	GameManager game;
+
+	//Networking vars
 	HSteamListenSocket m_hListenSock;
 	HSteamNetPollGroup m_hPollGroup;
 	ISteamNetworkingSockets *m_pInterface;
@@ -96,12 +108,25 @@ private:
 		//m_pInterface->SendMessageToConnection(conn, str, (uint32)strlen(str), k_nSteamNetworkingSend_Reliable, nullptr);
 	}
 
+	void SendDataToClient(HSteamNetConnection conn, DataPacket *data) {
+		m_pInterface->SendMessageToConnection(conn, data, (uint32)sizeof(*data), k_nSteamNetworkingSend_Reliable, nullptr);
+	}
+
 	void SendStringToAllClients(const char *str, HSteamNetConnection except = k_HSteamNetConnection_Invalid)
 	{
 		for (auto &c : m_mapClients)
 		{
 			if (c.first != except)
 				SendStringToClient(c.first, str);
+		}
+	}
+
+	void SendDataToAllClients(DataPacket *data, HSteamNetConnection except = k_HSteamNetConnection_Invalid)
+	{
+		for (auto &c : m_mapClients)
+		{
+			if (c.first != except)
+				SendDataToClient(c.first, data);
 		}
 	}
 
@@ -121,10 +146,26 @@ private:
 			auto itClient = m_mapClients.find(pIncomingMsg->m_conn);
 			assert(itClient != m_mapClients.end());
 
-			// '\0'-terminate it to make it easier to parse
-			std::string sCmd;
-			sCmd.assign((const char *)pIncomingMsg->m_pData, pIncomingMsg->m_cbSize);
-			const char *cmd = sCmd.c_str();
+			//parse data sent
+			DataPacket *data = (DataPacket*)pIncomingMsg->m_pData;
+			switch (data->type) {
+				//connection info
+				case DataPacket::MsgType::CONNECTION_STATUS: {
+					std::cout << "recieved connection data" << std::endl;
+				}
+				//attempting to place a piece
+				case DataPacket::MsgType::GAME_DATA: {
+					//if the current turn is set to the player that made the move
+					std::cout << "Recieved game data from client: " << std::endl;
+
+					//send the updated board to all the users
+					SendDataToAllClients(data);
+				}
+				default: {
+					std::cout << "Recieved data of no known type" << std::endl;
+				}
+			}
+			//std::cout << "Recieved game data from client: " << std::endl;
 
 			// We don't need this anymore.
 			pIncomingMsg->Release();
@@ -132,28 +173,9 @@ private:
 			// Check for known commands.  None of this example code is secure or robust.
 			// Don't write a real server like this, please.
 
-			if (strncmp(cmd, "/nick", 5) == 0)
-			{
-				const char *nick = cmd + 5;
-				while (isspace(*nick))
-					++nick;
-
-				// Let everybody else know they changed their name
-				sprintf_s(temp, "%s shall henceforth be known as %s", itClient->second.m_sNick.c_str(), nick);
-				SendStringToAllClients(temp, itClient->first);
-
-				// Respond to client
-				sprintf_s(temp, "Ye shall henceforth be known as %s", nick);
-				SendStringToClient(itClient->first, temp);
-
-				// Actually change their name
-				SetClientNick(itClient->first, nick);
-				continue;
-			}
-
 			// Assume it's just a ordinary chat message, dispatch to everybody else
-			sprintf_s(temp, "%s: %s", itClient->second.m_sNick.c_str(), cmd);
-			SendStringToAllClients(temp, itClient->first);
+			//sprintf_s(temp, "%s: %s", itClient->second.m_sNick.c_str(), cmd);
+			//SendStringToAllClients(temp, itClient->first);
 		}
 	}
 
@@ -176,7 +198,7 @@ private:
 
 				for (auto &c : m_mapClients)
 				{
-					m_pInterface->SendMessageToConnection(c.first, &data, (uint32)sizeof(data), k_nSteamNetworkingSend_Reliable, nullptr);
+					SendDataToClient(c.first, &data);
 				}
 				break;
 			}
@@ -293,18 +315,8 @@ private:
 				break;
 			}
 
-			// Generate a random nick.  A random temporary nick
-			// is really dumb and not how you would write a real chat server.
-			// You would want them to have some sort of signon message,
-			// and you would keep their client in a state of limbo (connected,
-			// but not logged on) until them.  I'm trying to keep this example
-			// code really simple.
-			char nick[64];
-			sprintf_s(nick, "BraveWarrior%d", 10000 + (rand() % 100000));
-
-			// Send them a welcome message
-			sprintf_s(temp, "Welcome, stranger.  Thou art known to us for now as '%s'; upon thine command '/nick' we shall know thee otherwise.", nick);
-			SendStringToClient(pInfo->m_hConn, temp);
+			// give a name based on the number of players connected to the server
+			std::string nick = "Player " + std::to_string(m_mapClients.size());
 
 			// Also send them a list of everybody who is already connected
 			if (m_mapClients.empty())
@@ -319,12 +331,14 @@ private:
 			}
 
 			// Let everybody else know who they are for now
-			sprintf_s(temp, "Hark!  A stranger hath joined this merry host.  For now we shall call them '%s'", nick);
-			SendStringToAllClients(temp, pInfo->m_hConn);
+			DataPacket data;
+			data.type = DataPacket::MsgType::CONNECTION_STATUS;
+			data.msg = (nick + " has joined the match");
+			SendDataToAllClients(&data, pInfo->m_hConn);
 
 			// Add them to the client list, using std::map wacky syntax
 			m_mapClients[pInfo->m_hConn];
-			SetClientNick(pInfo->m_hConn, nick);
+			SetClientNick(pInfo->m_hConn, nick.c_str());
 			break;
 		}
 

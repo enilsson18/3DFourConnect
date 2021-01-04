@@ -29,6 +29,14 @@
 #include "Server.h"
 #include "Client.h"
 
+//Board and game classes
+#include "GameManager.h"
+#include "Board.h"
+#include "Piece.h"
+
+//callback setup
+void winCallback(Piece::Color color);
+
 Server *Server::s_pCallbackInstance = nullptr;
 
 Client *Client::s_pCallbackInstance = nullptr;
@@ -142,13 +150,20 @@ int main(int argc, const char *argv[])
 	if ((bClient == bServer || (bClient && addrServer.IsIPv6AllZeros())) && bLocal == false)
 		PrintUsageAndExit();
 
+	//get the base path and send it to the game
+	//char basePath[255] = "";
+	//_fullpath(basePath, argv[0], sizeof(basePath));
+	//std::cout << basePath << std::endl;
+
 	// Create client and server sockets
 	InitSteamDatagramConnectionSockets();
 	LocalUserInput_Init();
 
+	//decide which game to make
 	if (bLocal) {
 		Local3DFourConnect game;
-		game.run();
+		//game.gameManager.setWinCallback(winCallback);
+		while (game.run() == 1) {};
 	}
 	else if (bClient)
 	{
@@ -167,4 +182,8 @@ int main(int argc, const char *argv[])
 	// Just nuke the process
 	//LocalUserInput_Kill();
 	//NukeProcess(0);
+}
+
+void winCallback(Piece::Color color) {
+	std::cout << "recieved" << std::endl;
 }

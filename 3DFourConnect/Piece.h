@@ -56,7 +56,9 @@ public:
 		}
 
 		//std::cout << "original " << asset << std::endl;
-		(*graphics).addAsset(asset);
+		if (graphics != nullptr) {
+			(*graphics).addAsset(asset);
+		} 
 	}
 };
 
