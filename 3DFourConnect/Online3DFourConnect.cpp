@@ -43,18 +43,12 @@ Client *Client::s_pCallbackInstance = nullptr;
 
 const uint16 DEFAULT_SERVER_PORT = 25565;
 
-void PrintUsageAndExit(int rc = 1)
+void PrintUsageAndExit()
 {
-	fflush(stderr);
-	printf(
-		R"usage(The information entered was invalid.
-	Cmd argument usage:
-    3DFourConnect.exe client SERVER_ADDR
-    3DFourConnect.exe server [--port PORT]
-)usage"
-);
-	fflush(stdout);
-	exit(rc);
+	std::cout << "The information entered was invalid.\n" <<
+		"Cmd argument usage:\n" << 
+		"3DFourConnect.exe client SERVER_ADDR\n" <<
+		"3DFourConnect.exe server [--port PORT]" << std::endl;
 }
 
 //start up options
@@ -88,7 +82,7 @@ int main(int argc, const char *argv[])
 				PrintUsageAndExit();
 			nPort = atoi(argv[i]);
 			if (nPort <= 0 || nPort > 65535)
-				FatalError("Invalid port %d", nPort);
+				std::cout << "Invalid port " << nPort << std::endl;
 			continue;
 		}
 
@@ -96,7 +90,7 @@ int main(int argc, const char *argv[])
 		if (bClient && addrServer.IsIPv6AllZeros())
 		{
 			if (!addrServer.ParseString(argv[i]))
-				FatalError("Invalid server address '%s'", argv[i]);
+				std::cout << "Invalid server address " << argv[i] << std::endl;
 			if (addrServer.m_port == 0)
 				addrServer.m_port = DEFAULT_SERVER_PORT;
 			continue;
@@ -126,7 +120,7 @@ int main(int argc, const char *argv[])
 			std::cin >> additionalInfo;
 
 			if (!addrServer.ParseString(additionalInfo.c_str()))
-				FatalError("Invalid server address '%s'", additionalInfo.c_str());
+				std::cout << "Invalid server address " << additionalInfo.c_str() << std::endl;
 			if (addrServer.m_port == 0)
 				addrServer.m_port = DEFAULT_SERVER_PORT;
 		}
@@ -185,5 +179,5 @@ int main(int argc, const char *argv[])
 }
 
 void winCallback(Piece::Color color) {
-	std::cout << "recieved" << std::endl;
+	std::cout << "Win recieved" << std::endl;
 }

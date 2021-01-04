@@ -45,7 +45,7 @@ void LocalUserInput_Init()
 				if (g_bQuit)
 					return;
 				g_bQuit = true;
-				Printf("Failed to read on stdin, quitting\n");
+				std::cout << "Failed to read on stdin, quitting" << std::endl;
 				break;
 			}
 

@@ -550,6 +550,15 @@ public:
 		}
 	}
 
+	void setTurnToInt(int num) {
+		if (num == Piece::Color::RED) {
+			currentTurn = Piece::Color::RED;
+		}
+		else if (num == Piece::Color::BLUE) {
+			currentTurn = Piece::Color::BLUE;
+		}
+	}
+
 	void leftClick() {
 		leftClickStatus = true;
 	}

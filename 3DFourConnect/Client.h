@@ -36,6 +36,8 @@ void* clientPtr;
 class Client
 {
 public:
+	Local3DFourConnect game;
+
 	void Run(const SteamNetworkingIPAddr &serverAddr)
 	{
 		//setup local game stuff
@@ -52,12 +54,13 @@ public:
 		// Start connecting
 		char szAddr[SteamNetworkingIPAddr::k_cchMaxString];
 		serverAddr.ToString(szAddr, sizeof(szAddr), true);
-		Printf("Connecting to chat server at %s", szAddr);
+		std::cout << "Connecting to chat server at " << szAddr << std::endl;
 		SteamNetworkingConfigValue_t opt;
 		opt.SetPtr(k_ESteamNetworkingConfig_Callback_ConnectionStatusChanged, (void*)SteamNetConnectionStatusChangedCallback);
 		m_hConnection = m_pInterface->ConnectByIPAddress(serverAddr, 1, &opt);
-		if (m_hConnection == k_HSteamNetConnection_Invalid)
-			FatalError("Failed to create connection");
+		if (m_hConnection == k_HSteamNetConnection_Invalid) {
+			std::cout << "Failed to create connection" << std::endl;
+		}
 
 		while (!g_bQuit && game.run() == 1)
 		{
@@ -102,8 +105,6 @@ private:
 
 	string filepath;
 
-	Local3DFourConnect game;
-
 	HSteamNetConnection m_hConnection;
 	ISteamNetworkingSockets *m_pInterface;
 
@@ -116,24 +117,26 @@ private:
 			if (numMsgs == 0)
 				break;
 			if (numMsgs < 0)
-				FatalError("Error checking for messages");
+				std::cout << "Error checking for messages" << std::endl;
 
 			// Just echo anything we get from the server
 			//we trust anything coming from the server so just set the current board to whatever this is
 			DataPacket *data = (DataPacket*)pIncomingMsg->m_pData;
+			//std::cout << "data recieved" << std::endl;
 			switch (data->type) {
 				//connection info
 				case DataPacket::MsgType::CONNECTION_STATUS: {
-					std::cout << "recieved connection data" << std::endl;
+					//std::cout << data->msg << std::endl;
+					//std::cout << "recieved connection data" << std::endl;
 				}
 														 //attempting to place a piece
 				case DataPacket::MsgType::GAME_DATA: {
-					std::cout << "Recieved game data from server: " << std::endl;
-
 					game.gameManager.board.setBoardToData(data);
+
+					game.gameManager.setTurnToInt(data->currentTurn);
 				}
 				default: {
-					std::cout << "Recieved data of no known type" << std::endl;
+					//std::cout << "Recieved data of no known type" << std::endl;
 				}
 			}
 
@@ -152,7 +155,7 @@ private:
 			if (strcmp(cmd.c_str(), "/quit") == 0)
 			{
 				g_bQuit = true;
-				Printf("Disconnecting from chat server");
+				std::cout << "Disconnecting from chat server" << std::endl;
 
 				// Close the connection gracefully.
 				// We use linger mode to ask for any remaining reliable data
@@ -166,6 +169,7 @@ private:
 			if (strcmp(cmd.c_str(), "/clear") == 0) {
 				DataPacket data;
 				data.type = DataPacket::MsgType::GAME_DATA;
+				data.currentTurn = 1;
 
 				for (int x = 0; x < 4; x++) {
 					for (int y = 0; y < 4; y++) {
@@ -204,16 +208,16 @@ private:
 			{
 				// Note: we could distinguish between a timeout, a rejected connection,
 				// or some other transport problem.
-				Printf("We sought the remote host, yet our efforts were met with defeat.  (%s)", pInfo->m_info.m_szEndDebug);
+				std::cout << "We sought the remote host, yet our efforts were met with defeat. " << pInfo->m_info.m_szEndDebug << std::endl;
 			}
 			else if (pInfo->m_info.m_eState == k_ESteamNetworkingConnectionState_ProblemDetectedLocally)
 			{
-				Printf("Alas, troubles beset us; we have lost contact with the host.  (%s)", pInfo->m_info.m_szEndDebug);
+				std::cout << "Alas, troubles beset us; we have lost contact with the host. " << pInfo->m_info.m_szEndDebug << std::endl;
 			}
 			else
 			{
 				// NOTE: We could check the reason code for a normal disconnection
-				Printf("The host hath bidden us farewell.  (%s)", pInfo->m_info.m_szEndDebug);
+				std::cout << "The host hath bidden us farewell. " << pInfo->m_info.m_szEndDebug << std::endl;
 			}
 
 			// Clean up the connection.  This is important!
@@ -233,7 +237,7 @@ private:
 			break;
 
 		case k_ESteamNetworkingConnectionState_Connected:
-			Printf("Connected to server OK");
+			std::cout << "Connected to server OK" << std::endl;
 			break;
 
 		default:
@@ -262,6 +266,9 @@ void placePieceCallback(Piece::Color color, glm::vec3 pos) {
 	//get the base packet
 	DataPacket data = client->convertBoardToPacket();
 	data.type = DataPacket::MsgType::GAME_DATA;
+
+	//send turn after the turn has been switched already.
+	data.currentTurn = client->game.gameManager.currentTurn;
 
 	//send to server
 	client->sendDataToServer(&data);

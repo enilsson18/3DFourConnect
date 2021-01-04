@@ -47,11 +47,11 @@ public:
 		opt.SetPtr(k_ESteamNetworkingConfig_Callback_ConnectionStatusChanged, (void*)SteamNetConnectionStatusChangedCallback);
 		m_hListenSock = m_pInterface->CreateListenSocketIP(serverLocalAddr, 1, &opt);
 		if (m_hListenSock == k_HSteamListenSocket_Invalid)
-			FatalError("Failed to listen on port %d", nPort);
+			std::cout << "Failed to listen on port " << nPort << std::endl;
 		m_hPollGroup = m_pInterface->CreatePollGroup();
 		if (m_hPollGroup == k_HSteamNetPollGroup_Invalid)
-			FatalError("Failed to listen on port %d", nPort);
-		Printf("Server listening on port %d\n", nPort);
+			std::cout << "Failed to listen on port " << nPort << std::endl;
+		std::cout << "Server listening on port " << nPort << std::endl;
 
 		while (!g_bQuit)
 		{
@@ -65,7 +65,7 @@ public:
 		}
 
 		// Close all the connections
-		Printf("Closing connections...\n");
+		std::cout << "Closing connections..." << std::endl;
 		for (auto it : m_mapClients)
 		{
 			// Send them one more goodbye message.  Note that we also have the
@@ -141,7 +141,7 @@ private:
 			if (numMsgs == 0)
 				break;
 			if (numMsgs < 0)
-				FatalError("Error checking for messages");
+				std::cout << "Error checking for messages" << std::endl;
 			assert(numMsgs == 1 && pIncomingMsg);
 			auto itClient = m_mapClients.find(pIncomingMsg->m_conn);
 			assert(itClient != m_mapClients.end());
@@ -162,7 +162,7 @@ private:
 					SendDataToAllClients(data);
 				}
 				default: {
-					std::cout << "Recieved data of no known type" << std::endl;
+					//std::cout << "Recieved data of no known type" << std::endl;
 				}
 			}
 			//std::cout << "Recieved game data from client: " << std::endl;
@@ -187,14 +187,14 @@ private:
 			if (strcmp(cmd.c_str(), "/quit") == 0)
 			{
 				g_bQuit = true;
-				Printf("Shutting down server");
+				std::cout << "Shutting down server" << std::endl;
 				break;
 			}
 			if (strcmp(cmd.c_str(), "/test") == 0)
 			{
 				DataPacket data;
 				data.msg = "hello";
-				Printf("Sent Test Messages");
+				std::cout << "Sent Test Messages" << std::endl;
 
 				for (auto &c : m_mapClients)
 				{
@@ -204,7 +204,7 @@ private:
 			}
 
 			// That's the only command we support
-			Printf("The server only knows one command: '/quit'");
+			std::cout << "The server only knows one command: '/quit'" << std::endl;
 		}
 	}
 
@@ -261,12 +261,7 @@ private:
 				// Spew something to our own log.  Note that because we put their nick
 				// as the connection description, it will show up, along with their
 				// transport-specific data (e.g. their IP address)
-				Printf("Connection %s %s, reason %d: %s\n",
-					pInfo->m_info.m_szConnectionDescription,
-					pszDebugLogAction,
-					pInfo->m_info.m_eEndReason,
-					pInfo->m_info.m_szEndDebug
-				);
+				std::cout << "Connection " << pInfo->m_info.m_szConnectionDescription << pszDebugLogAction << ", reason " << pInfo->m_info.m_eEndReason << ": " << pInfo->m_info.m_szEndDebug << std::endl;
 
 				m_mapClients.erase(itClient);
 
@@ -293,7 +288,7 @@ private:
 			// This must be a new connection
 			assert(m_mapClients.find(pInfo->m_hConn) == m_mapClients.end());
 
-			Printf("Connection request from %s", pInfo->m_info.m_szConnectionDescription);
+			std::cout << "Connection request from " << pInfo->m_info.m_szConnectionDescription << std::endl;
 
 			// A client is attempting to connect
 			// Try to accept the connection.
@@ -303,7 +298,7 @@ private:
 				// disconnected, the connection may already be half closed.  Just
 				// destroy whatever we have on our side.
 				m_pInterface->CloseConnection(pInfo->m_hConn, 0, nullptr, false);
-				Printf("Can't accept connection.  (It was already closed?)");
+				std::cout << "Can't accept connection.  (It was already closed?)" << std::endl;
 				break;
 			}
 
@@ -311,7 +306,7 @@ private:
 			if (!m_pInterface->SetConnectionPollGroup(pInfo->m_hConn, m_hPollGroup))
 			{
 				m_pInterface->CloseConnection(pInfo->m_hConn, 0, nullptr, false);
-				Printf("Failed to set poll group?");
+				std::cout << "Failed to set poll group?" << std::endl;
 				break;
 			}
 
@@ -364,6 +359,32 @@ private:
 	{
 		s_pCallbackInstance = this;
 		m_pInterface->RunCallbacks();
+	}
+
+	//game stuff
+	//convert the pieces on the board to data 1's and 2's to represent red and blue respectivley.
+	//returns a datapacket with the int array converted to numbers
+	DataPacket convertBoardToPacket() {
+		DataPacket data;
+		data.type = DataPacket::MsgType::GAME_DATA;
+
+		for (int x = 0; x < 4; x++) {
+			for (int y = 0; y < 4; y++) {
+				for (int z = 0; z < 4; z++) {
+					if (game.board.data[x][y][z].type == Piece::Color::NONE) {
+						data.board[x][y][z] = 0;
+					}
+					if (game.board.data[x][y][z].type == Piece::Color::RED) {
+						data.board[x][y][z] = 1;
+					}
+					if (game.board.data[x][y][z].type == Piece::Color::BLUE) {
+						data.board[x][y][z] = 2;
+					}
+				}
+			}
+		}
+
+		return data;
 	}
 };
 

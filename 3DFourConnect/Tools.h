@@ -47,47 +47,13 @@ struct DataPacket
 
 	//game data info
 	//0 is None 1 is red, blue is 2
-	//int currentTurn;
+	int currentTurn;
 	int board[4][4][4];
 };
 
 //static methods
-static void DebugOutput(ESteamNetworkingSocketsDebugOutputType eType, const char *pszMsg)
-{
-	SteamNetworkingMicroseconds time = SteamNetworkingUtils()->GetLocalTimestamp() - g_logTimeZero;
-	printf("%10.6f %s\n", time*1e-6, pszMsg);
-	fflush(stdout);
-	if (eType == k_ESteamNetworkingSocketsDebugOutputType_Bug)
-	{
-		fflush(stdout);
-		fflush(stderr);
-	}
-}
-
-static void FatalError(const char *fmt, ...)
-{
-	char text[2048];
-	va_list ap;
-	va_start(ap, fmt);
-	vsprintf_s(text, fmt, ap);
-	va_end(ap);
-	char *nl = strchr(text, '\0') - 1;
-	if (nl >= text && *nl == '\n')
-		*nl = '\0';
-	DebugOutput(k_ESteamNetworkingSocketsDebugOutputType_Bug, text);
-}
-
-static void Printf(const char *fmt, ...)
-{
-	char text[2048];
-	va_list ap;
-	va_start(ap, fmt);
-	vsprintf_s(text, fmt, ap);
-	va_end(ap);
-	char *nl = strchr(text, '\0') - 1;
-	if (nl >= text && *nl == '\n')
-		*nl = '\0';
-	DebugOutput(k_ESteamNetworkingSocketsDebugOutputType_Msg, text);
+static void DebugOutput(ESteamNetworkingSocketsDebugOutputType eType, const char *pszMsg) {
+	std::cout << pszMsg << std::endl;
 }
 
 static void InitSteamDatagramConnectionSockets()
@@ -95,7 +61,7 @@ static void InitSteamDatagramConnectionSockets()
 #ifdef STEAMNETWORKINGSOCKETS_OPENSOURCE
 	SteamDatagramErrMsg errMsg;
 	if (!GameNetworkingSockets_Init(nullptr, errMsg))
-		FatalError("GameNetworkingSockets_Init failed.  %s", errMsg);
+		std::cout << "GameNetworkingSockets_Init failed. " << errMsg << std::endl;
 #else
 	SteamDatagramClient_SetAppID(570); // Just set something, doesn't matter what
 	//SteamDatagramClient_SetUniverse( k_EUniverseDev );
