@@ -67,9 +67,14 @@ inline void mouse_button_callback_custom(GLFWwindow* window, int button, int act
 //control callback for moving the mouse
 inline void mouse_callback_custom(GLFWwindow* window, double xpos, double ypos);
 
-// settings
-inline const unsigned int SCR_WIDTH = 1600;
-inline const unsigned int SCR_HEIGHT = 900;
+//settings
+inline float relativeScreenSize = 0.75;
+
+inline float aspectRatio = 16 / 9;
+
+//default
+inline unsigned int SCR_WIDTH = 1600*relativeScreenSize;
+inline unsigned int SCR_HEIGHT = 900*relativeScreenSize;
 
 inline bool fpsCounter = true;
 inline const double fps = 60;
@@ -93,6 +98,22 @@ public:
 	bool enableFPSCounter;
 
 	Local3DFourConnect() {
+		//set window size to max while also maintaining size ratio
+		RECT rect;
+		GetClientRect(GetDesktopWindow(), &rect);
+
+		SCR_WIDTH = (rect.right - rect.left) * relativeScreenSize;
+		SCR_HEIGHT = (rect.bottom - rect.top) * relativeScreenSize;
+
+		if (SCR_WIDTH / SCR_HEIGHT < aspectRatio) {
+			//base the size off the width
+			SCR_HEIGHT = SCR_WIDTH * (1 / aspectRatio);
+		}
+		if (SCR_HEIGHT / SCR_WIDTH > aspectRatio) {
+			//base the size off the height
+			SCR_WIDTH = SCR_HEIGHT * (aspectRatio);
+		}
+
 		//make the graphics engine (Jordan: Do not focus too much on this, it is very complicated and not relevant to the problem.
 		graphics = GraphicsEngine("3D Four Connect", &SCR_WIDTH, &SCR_HEIGHT, 1, true);
 
