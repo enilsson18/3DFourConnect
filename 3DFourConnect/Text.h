@@ -68,7 +68,7 @@ public:
 		}
 
 		// find path to font
-		std::string font_name = ("C:\\Users\\Erik\\source\\repos\\3DFourConnect\\3DFourConnect\\resources\\fonts\\arial.ttf");
+		std::string font_name = ("resources\\fonts\\arial.ttf");
 		if (font_name.empty())
 		{
 			std::cout << "ERROR::FREETYPE: Failed to load font_name" << std::endl;
