@@ -37,6 +37,7 @@ class Client
 {
 public:
 	Local3DFourConnect game;
+	int currentTurn;
 
 	void Run(const SteamNetworkingIPAddr &serverAddr)
 	{
@@ -71,8 +72,25 @@ public:
 		}
 	}
 
-	void sendDataToServer(DataPacket *data) {
+	void SendDataToServer(DataPacket *data) {
 		m_pInterface->SendMessageToConnection(m_hConnection, data, (uint32)sizeof(*data), k_nSteamNetworkingSend_Reliable, nullptr);
+	}
+
+	//shortcut to just send all relevant info to the server
+	void SendCurrentDataToServer() {
+		//get the base packet
+		DataPacket data = convertBoardToPacket();
+		data.type = DataPacket::MsgType::GAME_DATA;
+
+		//set scores
+		data.score1 = game.gameManager.score1;
+		data.score2 = game.gameManager.score2;
+
+		//send turn after the turn has been switched already.
+		data.currentTurn = game.gameManager.currentTurn;
+
+		//send to server
+		SendDataToServer(&data);
 	}
 
 	//game stuff
@@ -127,16 +145,29 @@ private:
 				//connection info
 				case DataPacket::MsgType::CONNECTION_STATUS: {
 					//std::cout << data->msg << std::endl;
-					//std::cout << "recieved connection data" << std::endl;
+					break;
 				}
-														 //attempting to place a piece
+				//attempting to place a piece
 				case DataPacket::MsgType::GAME_DATA: {
+					//board pieces
 					game.gameManager.board.setBoardToData(data);
 
+					//set current scores
+					game.gameManager.setScores((int)data->score1, (int)data->score2);
+
+					//set the current turn
 					game.gameManager.setTurnToInt(data->currentTurn);
+
+					break;
+				}
+				case DataPacket::MsgType::GAME_SETUP: {
+					game.gameManager.placeOnlyOnTurn = data->assignedTurn;
+
+					break;
 				}
 				default: {
-					//std::cout << "Recieved data of no known type" << std::endl;
+					std::cout << "Recieved data of no known type" << std::endl;
+					break;
 				}
 			}
 
@@ -179,7 +210,7 @@ private:
 					}
 				}
 
-				sendDataToServer(&data);
+				SendDataToServer(&data);
 			}
 
 			// Anything else, just send it to the server and let them parse it
@@ -208,16 +239,16 @@ private:
 			{
 				// Note: we could distinguish between a timeout, a rejected connection,
 				// or some other transport problem.
-				std::cout << "We sought the remote host, yet our efforts were met with defeat. " << pInfo->m_info.m_szEndDebug << std::endl;
+				std::cout << "Host not found. " << pInfo->m_info.m_szEndDebug << std::endl;
 			}
 			else if (pInfo->m_info.m_eState == k_ESteamNetworkingConnectionState_ProblemDetectedLocally)
 			{
-				std::cout << "Alas, troubles beset us; we have lost contact with the host. " << pInfo->m_info.m_szEndDebug << std::endl;
+				std::cout << "Contact lost with Host. " << pInfo->m_info.m_szEndDebug << std::endl;
 			}
 			else
 			{
 				// NOTE: We could check the reason code for a normal disconnection
-				std::cout << "The host hath bidden us farewell. " << pInfo->m_info.m_szEndDebug << std::endl;
+				std::cout << "The host has disconnected. " << pInfo->m_info.m_szEndDebug << std::endl;
 			}
 
 			// Clean up the connection.  This is important!
@@ -260,18 +291,11 @@ private:
 };
 
 void placePieceCallback(Piece::Color color, glm::vec3 pos) {
+	//send packet to server
 	Client *client = (Client*)clientPtr;
 	//if it is the clients turn
 
-	//get the base packet
-	DataPacket data = client->convertBoardToPacket();
-	data.type = DataPacket::MsgType::GAME_DATA;
-
-	//send turn after the turn has been switched already.
-	data.currentTurn = client->game.gameManager.currentTurn;
-
-	//send to server
-	client->sendDataToServer(&data);
+	client->SendCurrentDataToServer();
 
 	//std::cout << "sent message to server of type" << std::endl;
 }

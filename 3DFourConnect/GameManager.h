@@ -16,7 +16,7 @@
 #include <future>
 #include <iostream>
 
-#include "Text.h"
+#include "TextManager.h"
 
 //graphics tools
 #include "GraphicsEngine.h"
@@ -34,11 +34,18 @@ public:
 	void(*winCallback)(Piece::Color) = nullptr;
 	void(*placePieceCallback)(Piece::Color, glm::vec3) = nullptr;
 
+	//options
+	//will prevent placing a piece (1 is red, 2 is blue) unless the int is set to zero in which both moves can be done.
+	int placeOnlyOnTurn;
 
 	GraphicsEngine *graphics = nullptr;
 	Camera *camera = nullptr;
 
 	Board board;
+
+	//all score texts will use the tagformat "score#"
+	int score1;
+	int score2;
 
 	bool rightClickStatus;
 	bool leftClickStatus;
@@ -63,7 +70,11 @@ public:
 	GameManager() {
 		board = Board();
 
+		placeOnlyOnTurn = 0;
 		currentTurn = Piece::Color::RED;
+
+		score1 = 0;
+		score2 = 0;
 
 		stage = Stage::DATA;
 	}
@@ -74,6 +85,11 @@ public:
 
 		//default values init
 		camFollowDistance = 40.0f;
+
+		placeOnlyOnTurn = 0;
+
+		score1 = 0;
+		score2 = 0;
 
 		rightClickStatus = false;
 		leftClickStatus = false;
@@ -91,6 +107,10 @@ public:
 		if (stage == Stage::PLAY) {
 			outlinePiece = Piece(&graphics, Piece::Color::OUTLINE, glm::vec3(0));
 			outlinePiece.asset->visible = false;
+
+			//setup text
+			this->graphics->addText("Player 1: 0", "score1", 1, 95, 1.0f, glm::vec3(0.75,0.1,0.1));
+			this->graphics->addText("Player 2: 0", "score2", 1, 90, 1.0f, glm::vec3(0.1,0.1,0.75));
 		}
 
 		//testing setup
@@ -110,13 +130,17 @@ public:
 				string text;
 
 				cout << endl;
-				if (win == Piece::Color::BLUE) {
-					cout << "BLUE WINS!" << endl;
-					text = "Blue Wins!";
-				}
-				else if (win == Piece::Color::RED) {
+				if (win == Piece::Color::RED) {
 					cout << "RED WINS!" << endl;
 					text = "Red Wins!";
+
+					score1 += 1;
+				}
+				else if (win == Piece::Color::BLUE) {
+					cout << "BLUE WINS!" << endl;
+					text = "Blue Wins!";
+
+					score2 += 1;
 				}
 				//nobody wins
 				else if (board.fullBoard()) {
@@ -135,10 +159,20 @@ public:
 
 		//main game info
 		if (stage == Stage::PLAY) {
-			//if the preview piece is not set then make it
-			if (previewPiece.type != currentTurn) {
-				graphics->removeAsset(previewPiece.asset);
-				previewPiece = Piece(graphics, currentTurn, glm::vec3(0));
+			//basically if not multiplayer online then keep the preview color the same
+			if (placeOnlyOnTurn == 0) {
+				//if the preview piece is not set then make it
+				if (previewPiece.type != currentTurn) {
+					graphics->removeAsset(previewPiece.asset);
+					previewPiece = Piece(graphics, currentTurn, glm::vec3(0));
+				}
+			}
+			else {
+				//set if not set
+				if (previewPiece.type != placeOnlyOnTurn) {
+					graphics->removeAsset(previewPiece.asset);
+					previewPiece = Piece(graphics, Piece::Color(placeOnlyOnTurn), glm::vec3(0));
+				}
 			}
 
 			//check key input
@@ -159,7 +193,7 @@ public:
 
 			//handle selecting pieces
 			//if a piece is selected and it has a type NONE
-			if (selectedPiece != glm::vec3(-1) && board.data[(int)selectedPiece.x][(int)selectedPiece.y][(int)selectedPiece.z].type == Piece::Color::NONE) {
+			if ((currentTurn == placeOnlyOnTurn || placeOnlyOnTurn == 0) && selectedPiece != glm::vec3(-1) && board.data[(int)selectedPiece.x][(int)selectedPiece.y][(int)selectedPiece.z].type == Piece::Color::NONE) {
 				//set outline piece location and visibility
 				outlinePiece.asset->setPosition(board.getPiecePosFromCoord((int)selectedPiece.x, (int)selectedPiece.y, (int)selectedPiece.z));
 				outlinePiece.asset->visible = true;
@@ -190,13 +224,19 @@ public:
 				string text;
 
 				cout << endl;
-				if (win == Piece::Color::BLUE) {
-					cout << "BLUE WINS!" << endl;
-					text = "Blue Wins!";
-				}
-				else if (win == Piece::Color::RED) {
+				if (win == Piece::Color::RED) {
 					cout << "RED WINS!" << endl;
 					text = "Red Wins!";
+
+					score1 += 1;
+					graphics->setText("score1", "Player 1: " + to_string(score1));
+				}
+				else if (win == Piece::Color::BLUE) {
+					cout << "BLUE WINS!" << endl;
+					text = "Blue Wins!";
+
+					score2 += 1;
+					graphics->setText("score2", "Player 2: " + to_string(score2));
 				}
 				//nobody wins
 				else if (board.fullBoard()) {
@@ -209,6 +249,7 @@ public:
 					winCallback(win);
 				}
 				//graphics->textManager.addText(text, 25.0f, 25.0f, 1.0f, glm::vec3(0.5, 0.8f, 0.2f));
+
 				board.clearBoard();
 			}
 		}
@@ -557,6 +598,11 @@ public:
 		else if (num == Piece::Color::BLUE) {
 			currentTurn = Piece::Color::BLUE;
 		}
+	}
+
+	void setScores(int score1, int score2) {
+		this->score1 = score1;
+		this->score2 = score2;
 	}
 
 	void leftClick() {

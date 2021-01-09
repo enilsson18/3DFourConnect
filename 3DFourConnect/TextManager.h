@@ -1,5 +1,5 @@
-#ifndef TEXT_H
-#define TEXT_H
+#ifndef TEXTMANAGER_H
+#define TEXTMANAGER_H
 
 #include <iostream>
 #include <map>
@@ -26,17 +26,27 @@ struct Character {
 	unsigned int Advance;   // Horizontal offset to advance to next glyph
 };
 
-struct Msg {
-	std::string text;
-	bool visible;
-	float x;
-	float y;
-	float scale;
-	glm::vec3 color;
-};
-
-class Text {
+//text manager class
+class TextManager {
 public:
+	int SCR_WIDTH;
+	int SCR_HEIGHT;
+
+	//public struct for each individual text
+	//tag is identifier for each text block
+	struct Text {
+		std::string text;
+		std::string tag;
+		bool visible;
+
+		//percentages relative to the window size
+		float x;
+		float y;
+
+		float scale;
+		glm::vec3 color;
+	};
+
 	Shader shader;
 
 	glm::mat4 projection;
@@ -44,13 +54,16 @@ public:
 	std::map<GLchar, Character> Characters;
 	unsigned int VAO, VBO;
 
-	std::vector<Msg> textList;
+	std::vector<Text> textList;
 
-	Text() {
+	TextManager() {
 
 	}
 
-	Text(const unsigned int &SCR_WIDTH, const unsigned int &SCR_HEIGHT) {
+	TextManager(const unsigned int &SCR_WIDTH, const unsigned int &SCR_HEIGHT) {
+		this->SCR_WIDTH = SCR_WIDTH;
+		this->SCR_HEIGHT = SCR_HEIGHT;
+
 		//setup projection and camera angle for render of characters
 		shader = Shader("resources/shaders/text.vs", "resources/shaders/text.fs");
 		projection = glm::ortho(0.0f, static_cast<float>(SCR_WIDTH), 0.0f, static_cast<float>(SCR_HEIGHT));
@@ -155,10 +168,11 @@ public:
 		}
 	}
 
-	void addText(std::string text, float x, float y, float scale, glm::vec3 color) {
-		Msg msg;
+	void addText(std::string text, std::string tag, float x, float y, float scale, glm::vec3 color) {
+		Text msg;
 
 		msg.text = text;
+		msg.tag = tag;
 		msg.visible = true;
 		msg.x = x;
 		msg.y = y;
@@ -169,23 +183,42 @@ public:
 	}
 	
 	//remove one instance of the text if found
-	bool removeText(std::string text) {
+	Text removeText(std::string tag) {
 		for (int i = 0; i < textList.size(); i++) {
-			if (text == textList[i].text) {
+			if (tag == textList[i].tag) {
+				Text temp = textList[i];
 				textList.erase(textList.begin()+i);
-				return true;
+				return temp;
 			}
 		}
 
-		return false;
+		return Text();
+	}
+
+	void setText(std::string tag, std::string text) {
+		for (int i = 0; i < textList.size(); i++) {
+			if (tag == textList[i].tag) {
+				textList[i].text = text;
+			}
+		}
+	}
+
+	Text* getText(std::string tag) {
+		for (int i = 0; i < textList.size(); i++) {
+			if (tag == textList[i].tag) {
+				return &textList[i];
+			}
+		}
 	}
 
 
 private:
-	// render line of text
-	// -------------------
 	void RenderText(Shader &shader, std::string text, float x, float y, float scale, glm::vec3 color)
 	{
+		//convert x and y coordinates from percentage to actual pixel values
+		x = (x / 100) * (SCR_WIDTH);
+		y = (y / 100) * (SCR_HEIGHT);
+
 		// activate corresponding render state	
 		shader.use();
 		glUniform3f(glGetUniformLocation(shader.ID, "textColor"), color.x, color.y, color.z);

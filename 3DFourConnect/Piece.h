@@ -38,27 +38,30 @@ public:
 		this->graphics = graphics;
 		this->type = type;
 
-		//make models based on color, set the position, and set the pointer to the model.
-		if (this->type == Color::NONE) {
+		//if the graphics is not enabled
+		if (graphics != nullptr) {
+			//make models based on color, set the position, and set the pointer to the model.
+			if (this->type == Color::NONE) {
+				asset = new Asset(pos);
+			}
+			else if (this->type == Color::RED) {
+				asset = new Asset((*graphics).getModel("redball.obj"), pos, glm::vec3(0), glm::vec3(1));
+				//std::cout << "red" << std::endl;
+			}
+			else if (this->type == Color::BLUE) {
+				asset = new Asset((*graphics).getModel("blueball.obj"), pos, glm::vec3(0), glm::vec3(1));
+				//std::cout << "blue" << std::endl;
+			}
+			else if (this->type == Color::OUTLINE) {
+				asset = new Asset((*graphics).getModel("outlineball.obj"), pos, glm::vec3(0), glm::vec3(1));
+				//std::cout << "blue" << std::endl;
+			}
+
+			(*graphics).addAsset(asset);
+		}
+		else {
 			asset = new Asset(pos);
 		}
-		else if (this->type == Color::RED) {
-			asset = new Asset((*graphics).getModel("redball.obj"), pos, glm::vec3(0), glm::vec3(1));
-			//std::cout << "red" << std::endl;
-		}
-		else if (this->type == Color::BLUE) {
-			asset = new Asset((*graphics).getModel("blueball.obj"), pos, glm::vec3(0), glm::vec3(1));
-			//std::cout << "blue" << std::endl;
-		}
-		else if (this->type == Color::OUTLINE) {
-			asset = new Asset((*graphics).getModel("outlineball.obj"), pos, glm::vec3(0), glm::vec3(1));
-			//std::cout << "blue" << std::endl;
-		}
-
-		//std::cout << "original " << asset << std::endl;
-		if (graphics != nullptr) {
-			(*graphics).addAsset(asset);
-		} 
 	}
 };
 

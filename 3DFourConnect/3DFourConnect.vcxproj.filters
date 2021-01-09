@@ -42,9 +42,6 @@
     <ClInclude Include="Mesh.h">
       <Filter>Source Files\Graphics Tools</Filter>
     </ClInclude>
-    <ClInclude Include="Text.h">
-      <Filter>Source Files\Graphics Tools</Filter>
-    </ClInclude>
     <ClInclude Include="Board.h">
       <Filter>Source Files</Filter>
     </ClInclude>
@@ -68,6 +65,9 @@
     </ClInclude>
     <ClInclude Include="Tools.h">
       <Filter>Source Files\Networking</Filter>
+    </ClInclude>
+    <ClInclude Include="TextManager.h">
+      <Filter>Source Files\Graphics Tools</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

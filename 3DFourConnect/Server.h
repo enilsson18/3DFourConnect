@@ -112,6 +112,22 @@ private:
 		m_pInterface->SendMessageToConnection(conn, data, (uint32)sizeof(*data), k_nSteamNetworkingSend_Reliable, nullptr);
 	}
 
+	void SendCurrentDataToClient(HSteamNetConnection conn) {
+		//get the base packet
+		DataPacket data = convertBoardToPacket();
+		data.type = DataPacket::MsgType::GAME_DATA;
+
+		//set scores
+		data.score1 = game.score1;
+		data.score2 = game.score2;
+
+		//send turn after the turn has been switched already.
+		data.currentTurn = game.currentTurn;
+
+		//send to server
+		SendDataToClient(conn, &data);
+	}
+
 	void SendStringToAllClients(const char *str, HSteamNetConnection except = k_HSteamNetConnection_Invalid)
 	{
 		for (auto &c : m_mapClients)
@@ -127,6 +143,14 @@ private:
 		{
 			if (c.first != except)
 				SendDataToClient(c.first, data);
+		}
+	}
+
+	void SendCurrentDataToAllClients(HSteamNetConnection except = k_HSteamNetConnection_Invalid) {
+		for (auto &c : m_mapClients)
+		{
+			if (c.first != except)
+				SendCurrentDataToClient(c.first);
 		}
 	}
 
@@ -152,17 +176,26 @@ private:
 				//connection info
 				case DataPacket::MsgType::CONNECTION_STATUS: {
 					std::cout << "recieved connection data" << std::endl;
+					break;
 				}
-				//attempting to place a piece
+				//parse data recieved from clients (sorry it is not secure)
 				case DataPacket::MsgType::GAME_DATA: {
 					//if the current turn is set to the player that made the move
 					std::cout << "Recieved game data from client: " << std::endl;
 
+					game.board.setBoardToData(data);
+
+					game.setScores((int)data->score1, (int)data->score2);
+
+					game.setTurnToInt(data->currentTurn);
+
 					//send the updated board to all the users
-					SendDataToAllClients(data);
+					SendCurrentDataToAllClients();
+					break;
 				}
 				default: {
 					//std::cout << "Recieved data of no known type" << std::endl;
+					break;
 				}
 			}
 			//std::cout << "Recieved game data from client: " << std::endl;
@@ -313,23 +346,20 @@ private:
 			// give a name based on the number of players connected to the server
 			std::string nick = "Player " + std::to_string(m_mapClients.size());
 
-			// Also send them a list of everybody who is already connected
-			if (m_mapClients.empty())
-			{
-				SendStringToClient(pInfo->m_hConn, "Thou art utterly alone.");
-			}
-			else
-			{
-				sprintf_s(temp, "%d companions greet you:", (int)m_mapClients.size());
-				for (auto &c : m_mapClients)
-					SendStringToClient(pInfo->m_hConn, c.second.m_sNick.c_str());
-			}
-
-			// Let everybody else know who they are for now
+			//send message to all players that somebody joined
 			DataPacket data;
-			data.type = DataPacket::MsgType::CONNECTION_STATUS;
-			data.msg = (nick + " has joined the match");
+			data.type = data.CONNECTION_STATUS;
+			data.msg = nick + " joined the server. Current # of players on server: " + to_string((int)m_mapClients.size());
 			SendDataToAllClients(&data, pInfo->m_hConn);
+
+			//send game setup info to the new connection so they know what turn they are
+			data = DataPacket();
+			data.type = data.GAME_SETUP;
+			data.assignedTurn = ((int)m_mapClients.size()) % 2 + 1;
+			SendDataToClient(pInfo->m_hConn, &data);
+
+			//send current gamedata
+			SendCurrentDataToClient(pInfo->m_hConn);
 
 			// Add them to the client list, using std::map wacky syntax
 			m_mapClients[pInfo->m_hConn];

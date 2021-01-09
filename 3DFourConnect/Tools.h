@@ -39,14 +39,19 @@ static SteamNetworkingMicroseconds g_logTimeZero;
 //score is optional and only for the server to use
 struct DataPacket
 {
-	enum MsgType {GAME_DATA, CONNECTION_STATUS};
+	enum MsgType {GAME_DATA, GAME_SETUP, CONNECTION_STATUS};
 	MsgType type;
 
 	//connection status info
 	std::string msg;
 
+	//game setup
+	int assignedTurn;
+
 	//game data info
 	//0 is None 1 is red, blue is 2
+	int score1 = 0;
+	int score2 = 0;
 	int currentTurn;
 	int board[4][4][4];
 };

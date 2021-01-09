@@ -65,6 +65,7 @@ public:
 		}
 
 		//remove old asset
+		if (graphics != nullptr)
 		graphics->removeAsset(data[x][y][z].asset);
 		//since the origin of the board is at the bottom center, we just find the bottom left corner and work relatively.
 		glm::vec3 pos = getPiecePosFromCoord(x,y,z);

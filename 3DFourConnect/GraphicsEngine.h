@@ -24,7 +24,7 @@
 #include "Model.h"
 #include "Mesh.h"
 #include "Skybox.h"
-#include "Text.h"
+#include "TextManager.h"
 
 //prototypes
 //callbacks
@@ -85,7 +85,7 @@ public:
 	unsigned int VBO;
 
 	//text stuff
-	Text textManager;
+	TextManager textManager;
 
 	GraphicsEngine() {
 
@@ -161,7 +161,7 @@ public:
 		}
 
 		//text setup
-		textManager = Text(*SCR_WIDTH, *SCR_HEIGHT);
+		textManager = TextManager(*SCR_WIDTH, *SCR_HEIGHT);
 
 		//Camera
 		camera = Camera(*SCR_WIDTH, *SCR_HEIGHT, glm::vec3(0.0, 7*1.5, 20), true);
@@ -256,8 +256,20 @@ public:
 	}
 
 	//text stuff
-	void addText(std::string text, float x, float y, float scale, glm::vec3 color) {
-		textManager.addText(text, x, y, scale, color);
+	void addText(std::string text, std::string tag, float x, float y, float scale, glm::vec3 color) {
+		textManager.addText(text, tag, x, y, scale, color);
+	}
+	
+	void removeText(std::string tag) {
+		textManager.removeText(tag);
+	}
+
+	void setText(std::string tag, std::string text) {
+		textManager.setText(tag, text);
+	}
+
+	TextManager::Text* getText(std::string tag) {
+		return textManager.getText(tag);
 	}
 
 	int renderFrame() {

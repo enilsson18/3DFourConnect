@@ -26,7 +26,7 @@
 
 //written class refrences
 #include "GraphicsEngine.h"
-#include "Text.h"
+#include "TextManager.h"
 
 //Board and game classes
 #include "GameManager.h"
@@ -68,7 +68,7 @@ inline void mouse_button_callback_custom(GLFWwindow* window, int button, int act
 inline void mouse_callback_custom(GLFWwindow* window, double xpos, double ypos);
 
 //settings
-inline float relativeScreenSize = 0.75;
+inline float relativeScreenSize = 0.85;
 
 inline float aspectRatio = 16 / 9;
 
@@ -144,7 +144,7 @@ public:
 		glfwSetMouseButtonCallback(graphics.window, mouse_button_callback_custom);
 
 		//add text
-		//graphics.textManager.addText("This is sample text", 25.0f, 25.0f, 1.0f, glm::vec3(0.5, 0.8f, 0.2f));
+		//graphics.textManager.addText("This is sample text", "test", 15.0f, 15.0f, 1.0f, glm::vec3(0.5, 0.8f, 0.2f));
 
 		//add test piece
 		//gameManager.board.addPiece(Piece::Color::BLUE, 0, 3, 0);
