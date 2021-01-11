@@ -55,6 +55,8 @@ public:
 
 	Piece::Color currentTurn;
 	glm::vec3 mouseRay;
+	//-1 means not selected anything
+	glm::vec3 selectedPiece;
 
 	enum Stage { TESTING, SETUP, PLAY, DATA, END };
 	Stage stage;
@@ -95,6 +97,8 @@ public:
 		leftClickStatus = false;
 
 		mousePos = glm::vec2(0);
+
+		selectedPiece = glm::vec3(-1);
 
 		//construct the game setup
 		board = Board(graphics, pos);
@@ -188,8 +192,7 @@ public:
 			//update mouse ray
 			updateMouseRay();
 
-			//find selected pieces
-			glm::vec3 selectedPiece = checkSelectPiece();
+			//The selected pieces are found in the mouseUpdate Callback
 
 			//handle selecting pieces
 			//if a piece is selected and it has a type NONE
@@ -651,6 +654,8 @@ public:
 	//update mouse pos
 	void mouseUpdate(double x, double y) {
 		mousePos = glm::vec2(x, y);
+
+		selectedPiece = checkSelectPiece();
 	}
 
 	//find the vector ray where the mouse is looking

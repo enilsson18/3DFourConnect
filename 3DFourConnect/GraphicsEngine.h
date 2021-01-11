@@ -94,6 +94,7 @@ public:
 	//takes in window display name, screen width, screen height, and number of samples per frame (1 is no multisampling). The last is if you want to have custom or preset control callbacks.
 	//MULTISAMPLING TEXTURES DOES NOT WORK. MAKE SURE TO SET SAMPLES TO 1.
 	GraphicsEngine(const char* windowName, const unsigned int *scr_WIDTH, const unsigned int *scr_HEIGHT, int samples, bool customCallback) {
+
 		this->samples = samples;
 
 		//window setup
@@ -164,7 +165,7 @@ public:
 		textManager = TextManager(*SCR_WIDTH, *SCR_HEIGHT);
 
 		//Camera
-		camera = Camera(*SCR_WIDTH, *SCR_HEIGHT, glm::vec3(0.0, 7*1.5, 20), true);
+		camera = Camera(SCR_WIDTH, SCR_HEIGHT, glm::vec3(0.0, 7*1.5, 20), true);
 		cameraPointer = &camera;
 
 		//Skybox setup
@@ -465,6 +466,7 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 	std::cout << "Failed to create GLFW window" << std::endl;
 	// make sure the viewport matches the new window dimensions; note that width and 
 	// height will be significantly larger than specified on some displays
+
 	glViewport(0, 0, width, height);
 }
 

@@ -72,7 +72,7 @@ public:
 			// connection close reason as a place to send final data. However,
 			// that's usually best left for more diagnostic/debug text not actual
 			// protocol strings.
-			SendStringToClient(it.first, "Server is shutting down.  Goodbye.");
+			//SendStringToClient(it.first, "Server is shutting down.  Goodbye.");
 
 			// Close the connection.  We use "linger mode" to ask SteamNetworkingSockets
 			// to flush this out and close gracefully.
@@ -103,9 +103,12 @@ private:
 
 	std::map< HSteamNetConnection, Client_t > m_mapClients;
 
-	void SendStringToClient(HSteamNetConnection conn, const char *str)
+	void SendStringToClient(HSteamNetConnection conn, const char* str)
 	{
-		//m_pInterface->SendMessageToConnection(conn, str, (uint32)strlen(str), k_nSteamNetworkingSend_Reliable, nullptr);
+		DataPacket data;
+		data.type = data.CONNECTION_STATUS;
+		data.msg = str;
+		m_pInterface->SendMessageToConnection(conn, &data, (uint32)sizeof(data), k_nSteamNetworkingSend_Reliable, nullptr);
 	}
 
 	void SendDataToClient(HSteamNetConnection conn, DataPacket *data) {
@@ -128,12 +131,12 @@ private:
 		SendDataToClient(conn, &data);
 	}
 
-	void SendStringToAllClients(const char *str, HSteamNetConnection except = k_HSteamNetConnection_Invalid)
+	void SendStringToAllClients(string str, HSteamNetConnection except = k_HSteamNetConnection_Invalid)
 	{
 		for (auto &c : m_mapClients)
 		{
 			if (c.first != except)
-				SendStringToClient(c.first, str);
+				SendStringToClient(c.first, str.c_str());
 		}
 	}
 
@@ -181,7 +184,7 @@ private:
 				//parse data recieved from clients (sorry it is not secure)
 				case DataPacket::MsgType::GAME_DATA: {
 					//if the current turn is set to the player that made the move
-					std::cout << "Recieved game data from client: " << std::endl;
+					std::cout << "Recieved game data from client: " + m_mapClients[pIncomingMsg->m_conn].m_sNick << std::endl;
 
 					game.board.setBoardToData(data);
 
@@ -208,7 +211,7 @@ private:
 
 			// Assume it's just a ordinary chat message, dispatch to everybody else
 			//sprintf_s(temp, "%s: %s", itClient->second.m_sNick.c_str(), cmd);
-			//SendStringToAllClients(temp, itClient->first);
+			SendStringToAllClients(temp, itClient->first);
 		}
 	}
 
@@ -225,14 +228,10 @@ private:
 			}
 			if (strcmp(cmd.c_str(), "/test") == 0)
 			{
-				DataPacket data;
-				data.msg = "hello";
+				SendStringToAllClients("recieved test msg from server");
+				
 				std::cout << "Sent Test Messages" << std::endl;
 
-				for (auto &c : m_mapClients)
-				{
-					SendDataToClient(c.first, &data);
-				}
 				break;
 			}
 
@@ -323,6 +322,12 @@ private:
 
 			std::cout << "Connection request from " << pInfo->m_info.m_szConnectionDescription << std::endl;
 
+			//deny the request if the number of people in the server already is over two
+			if ((int)m_mapClients.size() + 1 > 2) {
+				//SendStringToClient(pInfo->m_hConn, "The server is currently full. Please wait or make another server on a different port or ip address.");
+				break;
+			}
+
 			// A client is attempting to connect
 			// Try to accept the connection.
 			if (m_pInterface->AcceptConnection(pInfo->m_hConn) != k_EResultOK)
@@ -344,16 +349,13 @@ private:
 			}
 
 			// give a name based on the number of players connected to the server
-			std::string nick = "Player " + std::to_string(m_mapClients.size());
+			string nick = "Player " + std::to_string(m_mapClients.size());
 
 			//send message to all players that somebody joined
-			DataPacket data;
-			data.type = data.CONNECTION_STATUS;
-			data.msg = nick + " joined the server. Current # of players on server: " + to_string((int)m_mapClients.size());
-			SendDataToAllClients(&data, pInfo->m_hConn);
+			SendStringToAllClients(nick + " joined the server. Current # of players on server: " + to_string((int)m_mapClients.size()), pInfo->m_hConn);
 
 			//send game setup info to the new connection so they know what turn they are
-			data = DataPacket();
+			DataPacket data;
 			data.type = data.GAME_SETUP;
 			data.assignedTurn = ((int)m_mapClients.size()) % 2 + 1;
 			SendDataToClient(pInfo->m_hConn, &data);

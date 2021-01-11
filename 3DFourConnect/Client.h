@@ -144,7 +144,7 @@ private:
 			switch (data->type) {
 				//connection info
 				case DataPacket::MsgType::CONNECTION_STATUS: {
-					//std::cout << data->msg << std::endl;
+					//std::cout << data->msg.c_str() << std::endl;
 					break;
 				}
 				//attempting to place a piece
