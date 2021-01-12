@@ -30,6 +30,7 @@
 
 //prototypes
 void placePieceCallback(Piece::Color color, glm::vec3 pos);
+void outlinePieceMoveCallback(bool visible, glm::vec3 pos);
 
 void* clientPtr;
 
@@ -45,6 +46,7 @@ public:
 		clientPtr = this;
 
 		game.gameManager.setPiecePlaceCallback(placePieceCallback);
+		game.gameManager.setOutlinePieceMoveCallback(outlinePieceMoveCallback);
 
 		//disable fps counter
 		game.enableFPSCounter = false;
@@ -145,6 +147,12 @@ private:
 				//connection info
 				case DataPacket::MsgType::CONNECTION_STATUS: {
 					//std::cout << data->msg.c_str() << std::endl;
+					break;
+				}
+				//a person is moving their outline piece
+				case DataPacket::MsgType::GAME_SELECTION: {
+					game.gameManager.setOpponentOutlinePiece(data->selectedVisible, data->selectedPiecePos);
+
 					break;
 				}
 				//attempting to place a piece
@@ -289,6 +297,18 @@ private:
 		m_pInterface->RunCallbacks();
 	}
 };
+
+void outlinePieceMoveCallback(bool visible, glm::vec3 pos) {
+	//send packet to server
+	Client *client = (Client*)clientPtr;
+
+	DataPacket data;
+	data.type = data.GAME_SELECTION;
+	data.selectedVisible = visible;
+	data.selectedPiecePos = pos;
+
+	client->SendDataToServer(&data);
+}
 
 void placePieceCallback(Piece::Color color, glm::vec3 pos) {
 	//send packet to server

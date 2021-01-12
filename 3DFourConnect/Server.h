@@ -181,6 +181,12 @@ private:
 					std::cout << "recieved connection data" << std::endl;
 					break;
 				}
+				//parse the outline piece recieved
+				case DataPacket::MsgType::GAME_SELECTION: {
+					//send the selected piece as opponent to all people except the one who sent it
+					SendDataToAllClients(data, pIncomingMsg->m_conn);
+					break;
+				}
 				//parse data recieved from clients (sorry it is not secure)
 				case DataPacket::MsgType::GAME_DATA: {
 					//if the current turn is set to the player that made the move

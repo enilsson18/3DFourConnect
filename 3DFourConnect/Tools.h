@@ -39,7 +39,8 @@ static SteamNetworkingMicroseconds g_logTimeZero;
 //score is optional and only for the server to use
 struct DataPacket
 {
-	enum MsgType {GAME_DATA, GAME_SETUP, CONNECTION_STATUS};
+	//game data handles per move data, game_setup sends the setup info to the clients, game selection is a per selection update that just sends the position of cursor, connection status is basically just a message
+	enum MsgType {GAME_DATA, GAME_SETUP, GAME_SELECTION, CONNECTION_STATUS};
 	MsgType type;
 
 	//connection status info
@@ -47,6 +48,11 @@ struct DataPacket
 
 	//game setup
 	int assignedTurn;
+
+	//game selection
+	bool selectedVisible;
+	//board coordinate system 0-3 inclusive, not world space
+	glm::vec3 selectedPiecePos;
 
 	//game data info
 	//0 is None 1 is red, blue is 2

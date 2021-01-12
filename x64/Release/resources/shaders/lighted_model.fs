@@ -5,6 +5,15 @@ in vec3 Normal;
 in vec2 TexCoords;
 in vec3 FragPos;
 
+//override color
+uniform bool overrideColorEnabled = false;
+uniform vec3 overrideColor = vec3(1.0);
+
+//effect info
+//color changer
+uniform vec3 effectColor = vec3(1.0,1.0,1.0);
+uniform float effectColorStrength = 0.5;
+
 //light info
 uniform bool enableLighting = false;
 uniform vec3 lightPos;
@@ -97,5 +106,13 @@ void main()
     	lightingResults *= lightBrightness;
     }
 
+    //adjust for color effect multiplier
+    objectColor = objectColor * (1-effectColorStrength) + (effectColor * effectColorStrength);
+
     FragColor = vec4(objectColor * lightingResults, depthComponent * opacity);
+
+    //override for color
+    if (overrideColorEnabled){
+        FragColor = vec4(objectColor, depthComponent * opacity);
+    }
 }

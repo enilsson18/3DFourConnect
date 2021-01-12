@@ -33,6 +33,7 @@ public:
 	//callbacks
 	void(*winCallback)(Piece::Color) = nullptr;
 	void(*placePieceCallback)(Piece::Color, glm::vec3) = nullptr;
+	void(*outlinePieceMoveCallback) (bool, glm::vec3) = nullptr;
 
 	//options
 	//will prevent placing a piece (1 is red, 2 is blue) unless the int is set to zero in which both moves can be done.
@@ -199,7 +200,8 @@ public:
 
 				//setup opponents marker if they are not setup already
 				if (opponentPiece.asset == nullptr) {
-					opponentPiece = Piece(graphics, Piece::Color((placeOnlyOnTurn + 1 % 2) + 1), glm::vec3(0));
+					graphics->removeAsset(opponentPiece.asset);
+					opponentPiece = Piece(graphics, Piece::Color(((placeOnlyOnTurn + 0) % 2) + 1), glm::vec3(0));
 					opponentPiece.asset->gradient.enabled = true;
 					opponentPiece.asset->visible = false;
 				}
@@ -230,6 +232,10 @@ public:
 
 			//The selected pieces are found in the mouseUpdate Callback
 
+			//store the current state of outline piece so we don't send status of it every single frame
+			bool tempBool = outlinePiece.asset->visible;
+			glm::vec3 tempVec3 = outlinePiece.asset->position;
+
 			//handle selecting pieces
 			//if a piece is selected and it has a type NONE
 			//if ((currentTurn == placeOnlyOnTurn || placeOnlyOnTurn == 0) && selectedPiece != glm::vec3(-1) && board.data[(int)selectedPiece.x][(int)selectedPiece.y][(int)selectedPiece.z].type == Piece::Color::NONE) {
@@ -253,6 +259,13 @@ public:
 			}
 			else {
 				outlinePiece.asset->visible = false;
+			}
+
+			//check if the outline piece changed at all and if so, then activate callback
+			if (tempBool != outlinePiece.asset->visible || tempVec3 != outlinePiece.asset->position) {
+				if (placePieceCallback != nullptr) {
+					outlinePieceMoveCallback(outlinePiece.asset->visible, outlinePiece.asset->position);
+				}
 			}
 
 			//bind and rotate preview piece
@@ -288,9 +301,11 @@ public:
 					//std::cout << "callback call" << std::endl;
 					winCallback(win);
 				}
+				
+				board.clearBoard();
 				//graphics->textManager.addText(text, 25.0f, 25.0f, 1.0f, glm::vec3(0.5, 0.8f, 0.2f));
 
-				board.clearBoard();
+				
 			}
 		}
 
@@ -652,6 +667,15 @@ public:
 	void rightClick() {
 		rightClickStatus = true;
 	}
+
+	//set the opponent piece visibility and pos (pos is board coordinated not world
+	void setOpponentOutlinePiece(bool visible, glm::vec3 pos) {
+		opponentPiece.asset->visible = visible;
+
+		if (visible) {
+			opponentPiece.asset->setPosition(pos);
+		}
+	}
 	
 	//returns int positions of where the pieces are if they are selected
 	glm::vec3 checkSelectPiece() {
@@ -734,6 +758,11 @@ public:
 
 	void setPiecePlaceCallback(void f (Piece::Color, glm::vec3)) {
 		placePieceCallback = f;
+	}
+
+	//visible, position
+	void setOutlinePieceMoveCallback(void f(bool, glm::vec3)) {
+		outlinePieceMoveCallback = f;
 	}
 
 	//utility

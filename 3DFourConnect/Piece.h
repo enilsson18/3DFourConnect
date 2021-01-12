@@ -31,6 +31,7 @@ public:
 	Color type;
 
 	Piece() {
+		asset = nullptr;
 		type = Color::NONE;
 	}
 
