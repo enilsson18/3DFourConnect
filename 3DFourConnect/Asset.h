@@ -33,6 +33,28 @@ public:
 	glm::vec3 rotation;
 	glm::vec3 scale;
 
+	//Note: override disables lighting effects for the object
+	bool overrideColorEnabled;
+	glm::vec3 overrideColor;
+
+	//effects
+	struct Effect {
+		string name;
+		bool enabled = false;
+
+		glm::vec3 color;
+		float colorStrength = 0.5f;
+
+		//speed in animation
+		int speed = 20;
+
+		//progress in animation of effect
+		int frame = 0;
+	};
+
+	//make white gradient
+	Effect gradient;
+
 	Asset() {
 
 	}
@@ -43,6 +65,10 @@ public:
 		this->position = position;
 		this->rotation = glm::vec3(0.0f);
 		this->scale = glm::vec3(1.0f);
+
+		overrideColorEnabled = false;
+
+		gradient = Effect{"gradient", false, glm::vec3(1, 1, 1) };
 	}
 
 	Asset(Model *model) {
@@ -53,6 +79,10 @@ public:
 		position = glm::vec3(0.0f);
 		rotation = glm::vec3(0.0f);
 		scale = glm::vec3(1.0f);
+
+		overrideColorEnabled = false;
+
+		gradient = Effect{ "gradient", false, glm::vec3(1, 1, 1) };
 	}
 
 	Asset(Model *model, glm::vec3 position, glm::vec3 rotation, glm::vec3 scale) {
@@ -63,6 +93,10 @@ public:
 		this->position = position;
 		this->rotation = rotation;
 		this->scale = scale;
+
+		overrideColorEnabled = false;
+
+		gradient = Effect{ "gradient", false, glm::vec3(1, 1, 1) };
 	}
 
 	void setPosition(glm::vec3 position) {
@@ -96,6 +130,52 @@ public:
 
 	void setScale(glm::vec3 scale) {
 		this->scale = scale;
+	}
+
+	//Note: override disables lighting effects for the object
+	void setOverrideColor(glm::vec3 color) {
+		overrideColor = color;
+		overrideColorEnabled = true;
+	}
+
+	//effect stuff
+	void enableGradientEffect() {
+		gradient.enabled = true;
+	}
+
+	void disableGradientEffect() {
+		gradient.enabled = false;
+	}
+
+	void updateEffects(Shader &shader) {
+		// set defaults
+		shader.use();
+		shader.setVec3("effectColor", glm::vec3(1));
+		shader.setFloat("effectColorStrength", 0);
+
+		if (gradient.enabled) {
+			updateGradientEffect(shader);
+		}
+	}
+
+	//returns output color of the gradient effect
+	void updateGradientEffect(Shader &shader) {
+		gradient.frame += gradient.speed;
+
+		if (gradient.frame > 1000 || gradient.frame < 0) {
+			gradient.speed *= -1;
+			gradient.frame += gradient.speed;
+		}
+
+		//width of 100 rgb values
+		float width = 200;
+		//scale the output color
+		glm::vec3 output = (gradient.color - float(((255 - width) / 2) / 255)) * float((width/255) * (float(gradient.frame) / 1000)) + float(((255 - width) / 2) / 255);
+		//std::cout << to_string(output) << std::endl;
+
+		shader.use();
+		shader.setVec3("effectColor", output);
+		shader.setFloat("effectColorStrength", gradient.colorStrength);
 	}
 };
 

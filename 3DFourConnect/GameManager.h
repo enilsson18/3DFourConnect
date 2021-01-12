@@ -55,7 +55,8 @@ public:
 
 	Piece::Color currentTurn;
 	glm::vec3 mouseRay;
-	//-1 means not selected anything
+
+	//-1 means not selecting anything
 	glm::vec3 selectedPiece;
 
 	enum Stage { TESTING, SETUP, PLAY, DATA, END };
@@ -63,6 +64,9 @@ public:
 
 	Piece previewPiece;
 	Piece outlinePiece;
+
+	//for multiplayer only
+	Piece opponentPiece;
 
 	//testing
 	Piece testPiece;
@@ -77,6 +81,8 @@ public:
 
 		score1 = 0;
 		score2 = 0;
+
+		selectedPiece = glm::vec3(-1);
 
 		stage = Stage::DATA;
 	}
@@ -109,9 +115,6 @@ public:
 
 		//play setup
 		if (stage == Stage::PLAY) {
-			outlinePiece = Piece(&graphics, Piece::Color::OUTLINE, glm::vec3(0));
-			outlinePiece.asset->visible = false;
-
 			//setup text
 			this->graphics->addText("Player 1: 0", "score1", 1, 95, 1.0f, glm::vec3(0.75,0.1,0.1));
 			this->graphics->addText("Player 2: 0", "score2", 1, 90, 1.0f, glm::vec3(0.1,0.1,0.75));
@@ -170,12 +173,45 @@ public:
 					graphics->removeAsset(previewPiece.asset);
 					previewPiece = Piece(graphics, currentTurn, glm::vec3(0));
 				}
+
+				//if the outline piece is not set then make it
+				if (outlinePiece.type != currentTurn) {
+					graphics->removeAsset(outlinePiece.asset);
+					outlinePiece = Piece(graphics, currentTurn, glm::vec3(0));
+					outlinePiece.asset->gradient.enabled = true;
+					outlinePiece.asset->visible = false;
+				}
 			}
 			else {
 				//set if not set
 				if (previewPiece.type != placeOnlyOnTurn) {
 					graphics->removeAsset(previewPiece.asset);
 					previewPiece = Piece(graphics, Piece::Color(placeOnlyOnTurn), glm::vec3(0));
+				}
+
+				//outline piece
+				if (outlinePiece.type != placeOnlyOnTurn) {
+					graphics->removeAsset(outlinePiece.asset);
+					outlinePiece = Piece(graphics, Piece::Color(placeOnlyOnTurn), glm::vec3(0));
+					outlinePiece.asset->gradient.enabled = true;
+					outlinePiece.asset->visible = false;
+				}
+
+				//setup opponents marker if they are not setup already
+				if (opponentPiece.asset == nullptr) {
+					opponentPiece = Piece(graphics, Piece::Color((placeOnlyOnTurn + 1 % 2) + 1), glm::vec3(0));
+					opponentPiece.asset->gradient.enabled = true;
+					opponentPiece.asset->visible = false;
+				}
+
+				//change the strength of gradient on the outline piece if it is not their turn
+				if (currentTurn != placeOnlyOnTurn) {
+					outlinePiece.asset->gradient.colorStrength = 1.0f;
+					outlinePiece.asset->setOverrideColor(glm::vec3(1));
+				}
+				else {
+					outlinePiece.asset->gradient.colorStrength = 0.5f;
+					outlinePiece.asset->overrideColorEnabled = false;
 				}
 			}
 
@@ -196,13 +232,14 @@ public:
 
 			//handle selecting pieces
 			//if a piece is selected and it has a type NONE
-			if ((currentTurn == placeOnlyOnTurn || placeOnlyOnTurn == 0) && selectedPiece != glm::vec3(-1) && board.data[(int)selectedPiece.x][(int)selectedPiece.y][(int)selectedPiece.z].type == Piece::Color::NONE) {
+			//if ((currentTurn == placeOnlyOnTurn || placeOnlyOnTurn == 0) && selectedPiece != glm::vec3(-1) && board.data[(int)selectedPiece.x][(int)selectedPiece.y][(int)selectedPiece.z].type == Piece::Color::NONE) {
+			if (selectedPiece != glm::vec3(-1) && board.data[(int)selectedPiece.x][(int)selectedPiece.y][(int)selectedPiece.z].type == Piece::Color::NONE) {
 				//set outline piece location and visibility
 				outlinePiece.asset->setPosition(board.getPiecePosFromCoord((int)selectedPiece.x, (int)selectedPiece.y, (int)selectedPiece.z));
 				outlinePiece.asset->visible = true;
 
 				//check for right click or left click events to set piece
-				if (leftClickStatus) {
+				if (leftClickStatus && (currentTurn == placeOnlyOnTurn || placeOnlyOnTurn == 0)) {
 					board.addPiece(currentTurn, (int)selectedPiece.x, (int)selectedPiece.y, (int)selectedPiece.z);
 					switchTurn();
 

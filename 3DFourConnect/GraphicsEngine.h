@@ -323,12 +323,14 @@ public:
 		//draw backwards since the board is transparent and the balls and other objects need to be drawn first
 		for (int i = scene.size()-1; i >= 0; i--) {
 			if (scene[i]->visible) {
+				//camera stuff
 				glm::mat4 projection = camera.projection;
 				glm::mat4 view = camera.update();
 				shader.setMat4("projection", projection);
 				shader.setMat4("view", view);
 				shader.setVec3("viewPos", camera.pos);
 
+				//translate model
 				glm::mat4 model = glm::mat4(1.0f);
 				model = glm::translate(model, scene[i]->position);
 				model = glm::rotate(model, glm::radians(scene[i]->rotation.x), glm::vec3(1.0, 0.0, 0.0));
@@ -336,6 +338,15 @@ public:
 				model = glm::rotate(model, glm::radians(scene[i]->rotation.z), glm::vec3(0.0, 0.0, 1.0));
 				model = glm::scale(model, scene[i]->scale);	// it's a bit too big for our scene, so scale it down
 				shader.setMat4("model", model);
+
+				//color change
+				shader.setBool("overrideColorEnabled", scene[i]->overrideColorEnabled);
+				if (scene[i]->overrideColorEnabled) {
+					shader.setVec3("overrideColor", scene[i]->overrideColor);
+				}
+
+				//effects
+				scene[i]->updateEffects(shader);
 
 				scene[i]->model->Draw(shader, camera);
 			}
