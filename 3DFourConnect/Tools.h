@@ -1,4 +1,4 @@
-//always include Tools.h for shared methods between server and client
+// always include Tools.h for shared methods between server and client
 #ifndef TOOLS_H
 #define TOOLS_H
 
@@ -35,34 +35,34 @@ static bool g_bQuit = false;
 
 static SteamNetworkingMicroseconds g_logTimeZero;
 
-//includes the board, currently selected piece, and the scores of both players
-//score is optional and only for the server to use
+// includes the board, currently selected piece, and the scores of both players
+// score is optional and only for the server to use
 struct DataPacket
 {
-	//game data handles per move data, game_setup sends the setup info to the clients, game selection is a per selection update that just sends the position of cursor, connection status is basically just a message
+	// game data handles per move data, game_setup sends the setup info to the clients, game selection is a per selection update that just sends the position of cursor, connection status is basically just a message
 	enum MsgType {GAME_DATA, GAME_SETUP, GAME_SELECTION, CONNECTION_STATUS};
 	MsgType type;
 
-	//connection status info
+	// connection status info
 	std::string msg;
 
-	//game setup
+	// game setup
 	int assignedTurn;
 
-	//game selection
+	// game selection
 	bool selectedVisible;
-	//board coordinate system 0-3 inclusive, not world space
+	// board coordinate system 0-3 inclusive, not world space
 	glm::vec3 selectedPiecePos;
 
-	//game data info
-	//0 is None 1 is red, blue is 2
+	// game data info
+	// 0 is None, 1 is red, blue is 2
 	int score1 = 0;
 	int score2 = 0;
 	int currentTurn;
 	int board[4][4][4];
 };
 
-//static methods
+// static methods
 static void DebugOutput(ESteamNetworkingSocketsDebugOutputType eType, const char *pszMsg) {
 	std::cout << pszMsg << std::endl;
 }
@@ -75,7 +75,7 @@ static void InitSteamDatagramConnectionSockets()
 		std::cout << "GameNetworkingSockets_Init failed. " << errMsg << std::endl;
 #else
 	SteamDatagramClient_SetAppID(570); // Just set something, doesn't matter what
-	//SteamDatagramClient_SetUniverse( k_EUniverseDev );
+	// SteamDatagramClient_SetUniverse( k_EUniverseDev );
 
 	SteamDatagramErrMsg errMsg;
 	if (!SteamDatagramClient_Init(true, errMsg))
@@ -83,7 +83,7 @@ static void InitSteamDatagramConnectionSockets()
 
 	// Disable authentication when running with Steam, for this
 	// example, since we're not a real app.
-	//
+	// 
 	// Authentication is disabled automatically in the open-source
 	// version since we don't have a trusted third party to issue
 	// certs.
@@ -111,7 +111,7 @@ static void ShutdownSteamDatagramConnectionSockets()
 #endif
 }
 
-//vars
+// vars
 
 static std::mutex mutexUserInputQueue;
 static std::queue< std::string > queueUserInput;

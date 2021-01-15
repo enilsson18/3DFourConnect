@@ -1,3 +1,7 @@
+// Note: I did not write this code 100% myself.
+// This is an adaptation of the GameNetworkingSockets public example 
+// which was originally a simple chat program with clients and a server.
+
 #ifndef SERVER_H
 #define SERVER_H
 
@@ -30,13 +34,13 @@
 
 class Server {
 public:
+	// Start and run the server
 	void Run(uint16 nPort)
 	{
-		//init game stuff
+		// init game stuff
 		game = GameManager();
 
 		// Select instance to use.  For now we'll always use the default.
-		// But we could use SteamGameServerNetworkingSockets() on Steam.
 		m_pInterface = SteamNetworkingSockets();
 
 		// Start listening
@@ -53,6 +57,9 @@ public:
 			std::cout << "Failed to listen on port " << nPort << std::endl;
 		std::cout << "Server listening on port " << nPort << std::endl;
 
+		std::cout << "Server commands include: '/quit' and '/test'" << std::endl;
+
+		// Main server loop
 		while (!g_bQuit)
 		{
 			PollIncomingMessages();
@@ -61,6 +68,7 @@ public:
 
 			game.update();
 
+			//delay server update
 			std::this_thread::sleep_for(std::chrono::milliseconds(10));
 		}
 
@@ -68,16 +76,13 @@ public:
 		std::cout << "Closing connections..." << std::endl;
 		for (auto it : m_mapClients)
 		{
-			// Send them one more goodbye message.  Note that we also have the
-			// connection close reason as a place to send final data. However,
-			// that's usually best left for more diagnostic/debug text not actual
-			// protocol strings.
-			//SendStringToClient(it.first, "Server is shutting down.  Goodbye.");
+			// Send them one more goodbye message
+			// SendStringToClient(it.first, "Server is shutting down.  Goodbye.");
 
-			// Close the connection.  We use "linger mode" to ask SteamNetworkingSockets
-			// to flush this out and close gracefully.
+			// Close Connection
 			m_pInterface->CloseConnection(it.first, 0, "Server Shutdown", true);
 		}
+		// Reset and destroy vars
 		m_mapClients.clear();
 
 		m_pInterface->CloseListenSocket(m_hListenSock);
@@ -88,10 +93,10 @@ public:
 	}
 private:
 
-	//Game vars
+	// Game vars
 	GameManager game;
 
-	//Networking vars
+	// Networking vars
 	HSteamListenSocket m_hListenSock;
 	HSteamNetPollGroup m_hPollGroup;
 	ISteamNetworkingSockets *m_pInterface;
@@ -116,18 +121,18 @@ private:
 	}
 
 	void SendCurrentDataToClient(HSteamNetConnection conn) {
-		//get the base packet
+		// get the base packet
 		DataPacket data = convertBoardToPacket();
 		data.type = DataPacket::MsgType::GAME_DATA;
 
-		//set scores
+		// set scores
 		data.score1 = game.score1;
 		data.score2 = game.score2;
 
-		//send turn after the turn has been switched already.
+		// send turn after the turn has been switched already.
 		data.currentTurn = game.currentTurn;
 
-		//send to server
+		// send to server
 		SendDataToClient(conn, &data);
 	}
 
@@ -173,51 +178,47 @@ private:
 			auto itClient = m_mapClients.find(pIncomingMsg->m_conn);
 			assert(itClient != m_mapClients.end());
 
-			//parse data sent
+			// Parse Data Recieve From Clients
 			DataPacket *data = (DataPacket*)pIncomingMsg->m_pData;
 			switch (data->type) {
-				//connection info
+				// connection info
 				case DataPacket::MsgType::CONNECTION_STATUS: {
 					std::cout << "recieved connection data" << std::endl;
 					break;
 				}
-				//parse the outline piece recieved
+				// parse the outline piece recieved
 				case DataPacket::MsgType::GAME_SELECTION: {
-					//send the selected piece as opponent to all people except the one who sent it
+					// send the selected piece as opponent to all people except the one who sent it
 					SendDataToAllClients(data, pIncomingMsg->m_conn);
 					break;
 				}
-				//parse data recieved from clients (sorry it is not secure)
+				// parse data recieved from clients (sorry it is not secure)
 				case DataPacket::MsgType::GAME_DATA: {
-					//if the current turn is set to the player that made the move
+					// if the current turn is set to the player that made the move
 					std::cout << "Recieved game data from client: " + m_mapClients[pIncomingMsg->m_conn].m_sNick << std::endl;
 
 					game.board.setBoardToData(data);
 
 					game.setScores((int)data->score1, (int)data->score2);
 
-					game.setTurnToInt(data->currentTurn);
+					if (data->currentTurn != 0) {
+						game.setTurnToInt(data->currentTurn);
+					}
 
-					//send the updated board to all the users
+					// send the updated board to all the users
 					SendCurrentDataToAllClients();
 					break;
 				}
+				// Recieved unknown data type
 				default: {
-					//std::cout << "Recieved data of no known type" << std::endl;
+					// std::cout << "Recieved data of no known type" << std::endl;
 					break;
 				}
 			}
-			//std::cout << "Recieved game data from client: " << std::endl;
+			// std::cout << "Recieved game data from client: " << std::endl;
 
 			// We don't need this anymore.
 			pIncomingMsg->Release();
-
-			// Check for known commands.  None of this example code is secure or robust.
-			// Don't write a real server like this, please.
-
-			// Assume it's just a ordinary chat message, dispatch to everybody else
-			//sprintf_s(temp, "%s: %s", itClient->second.m_sNick.c_str(), cmd);
-			SendStringToAllClients(temp, itClient->first);
 		}
 	}
 
@@ -234,7 +235,7 @@ private:
 			}
 			if (strcmp(cmd.c_str(), "/test") == 0)
 			{
-				SendStringToAllClients("recieved test msg from server");
+				SendStringToAllClients("Recieved test msg from server");
 				
 				std::cout << "Sent Test Messages" << std::endl;
 
@@ -242,7 +243,7 @@ private:
 			}
 
 			// That's the only command we support
-			std::cout << "The server only knows one command: '/quit'" << std::endl;
+			std::cout << "Server commands include: '/quit' and '/test'" << std::endl;
 		}
 	}
 
@@ -328,9 +329,10 @@ private:
 
 			std::cout << "Connection request from " << pInfo->m_info.m_szConnectionDescription << std::endl;
 
-			//deny the request if the number of people in the server already is over two
+			// deny the request if the number of people in the server already is over two
 			if ((int)m_mapClients.size() + 1 > 2) {
-				//SendStringToClient(pInfo->m_hConn, "The server is currently full. Please wait or make another server on a different port or ip address.");
+				// SendStringToClient(pInfo->m_hConn, "The server is currently full. Please wait or make another server on a different port or ip address.");
+				std::cout << "More than two clients attempting to connect." << std::endl;
 				break;
 			}
 
@@ -357,16 +359,16 @@ private:
 			// give a name based on the number of players connected to the server
 			string nick = "Player " + std::to_string(m_mapClients.size());
 
-			//send message to all players that somebody joined
+			// send message to all players that somebody joined
 			SendStringToAllClients(nick + " joined the server. Current # of players on server: " + to_string((int)m_mapClients.size()), pInfo->m_hConn);
 
-			//send game setup info to the new connection so they know what turn they are
+			// send game setup info to the new connection so they know what turn they are
 			DataPacket data;
 			data.type = data.GAME_SETUP;
 			data.assignedTurn = ((int)m_mapClients.size()) % 2 + 1;
 			SendDataToClient(pInfo->m_hConn, &data);
 
-			//send current gamedata
+			// send current gamedata
 			SendCurrentDataToClient(pInfo->m_hConn);
 
 			// Add them to the client list, using std::map wacky syntax
@@ -399,9 +401,9 @@ private:
 		m_pInterface->RunCallbacks();
 	}
 
-	//game stuff
-	//convert the pieces on the board to data 1's and 2's to represent red and blue respectivley.
-	//returns a datapacket with the int array converted to numbers
+	// game stuff
+	// convert the pieces on the board to data 1's and 2's to represent red and blue respectivley.
+	// returns a datapacket with the int array converted to numbers
 	DataPacket convertBoardToPacket() {
 		DataPacket data;
 		data.type = DataPacket::MsgType::GAME_DATA;

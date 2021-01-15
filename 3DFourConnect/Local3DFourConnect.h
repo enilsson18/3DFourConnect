@@ -1,12 +1,14 @@
+// the manager for a rendered 3dfourconnect game.
+
 #ifndef LOCAL3DFOURCONNECT_H
 #define LOCAL3DFOURCONNECT_H
 
-//utility
+// utility
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <img/stb_image.h>
-//idk but manually importing fixes the problem
-//#include <img/ImageLoader.h>
+// idk but manually importing fixes the problem
+// #include <img/ImageLoader.h>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -24,23 +26,24 @@
 #include <ctime>
 #include <windows.h>
 
-//written class refrences
+// written class refrences
 #include "GraphicsEngine.h"
 #include "TextManager.h"
 
-//Board and game classes
+// Board and game classes
 #include "GameManager.h"
 #include "Board.h"
 #include "Piece.h"
 
-//file paths
+// file paths
+// models
 inline const char* RedModelPath = "resources\\objects\\redball\\redball.obj";
 inline const char* BlueModelPath = "resources\\objects\\blueball\\blueball.obj";
 inline const char* OutlineModelPath = "resources\\objects\\outlineball\\outlineball.obj";
 inline const char* BoardModelPath = "resources\\objects\\3dfourconnect\\3dfourconnectFIXED.obj";
 inline const char* BackpackModelPath = "resources\\objects\\testing\\backpack\\backpack.obj";
 
-//skybox paths
+// skybox paths
 inline const std::vector<const char*> cloudySkybox
 {
 	"resources/textures/CloudySkyBox/cubemap_1.jpg",
@@ -51,6 +54,7 @@ inline const std::vector<const char*> cloudySkybox
 	"resources/textures/CloudySkyBox/cubemap_2.jpg",
 };
 
+// unused second option for skybox
 inline const std::vector<const char*> galexySkybox
 {
 	"resources/textures/SpaceSkyBox/rightImage.png",
@@ -61,18 +65,18 @@ inline const std::vector<const char*> galexySkybox
 	"resources/textures/SpaceSkyBox/backImage.png",
 };
 
-//prototypes
-//control callback for clicking the mouse
+// prototypes
+// control callback for clicking the mouse
 inline void mouse_button_callback_custom(GLFWwindow* window, int button, int action, int mods);
-//control callback for moving the mouse
+// control callback for moving the mouse
 inline void mouse_callback_custom(GLFWwindow* window, double xpos, double ypos);
 
-//settings
+// settings
 inline float relativeScreenSize = 0.85;
 
 inline float aspectRatio = 16 / 9;
 
-//default
+// default
 inline unsigned int SCR_WIDTH = 1600*relativeScreenSize;
 inline unsigned int SCR_HEIGHT = 900*relativeScreenSize;
 
@@ -81,13 +85,13 @@ inline const double fps = 60;
 
 inline GameManager *gM;
 
-//set the static variable filepath before you create a class
+// set the static variable filepath before you create a class
 class Local3DFourConnect {
 public:
-	//make the graphics engine (Jordan: Do not focus too much on this, it is very complicated and not relevant to the problem.
+	// make the graphics engine (Jordan: Do not focus too much on this, it is very complicated and not relevant to the problem.
 	GraphicsEngine graphics;
 
-	//make the board and game manager
+	// make the board and game manager
 	GameManager gameManager;
 
 	int fpsCount;
@@ -98,7 +102,7 @@ public:
 	bool enableFPSCounter;
 
 	Local3DFourConnect() {
-		//set window size to max while also maintaining size ratio
+		// set window size to max while also maintaining size ratio
 		RECT rect;
 		GetClientRect(GetDesktopWindow(), &rect);
 
@@ -106,49 +110,49 @@ public:
 		SCR_HEIGHT = (rect.bottom - rect.top) * relativeScreenSize;
 
 		if (SCR_WIDTH / SCR_HEIGHT < aspectRatio) {
-			//base the size off the width
+			// base the size off the width
 			SCR_HEIGHT = SCR_WIDTH * (1 / aspectRatio);
 		}
 		if (SCR_HEIGHT / SCR_WIDTH > aspectRatio) {
-			//base the size off the height
+			// base the size off the height
 			SCR_WIDTH = SCR_HEIGHT * (aspectRatio);
 		}
 
-		//make the graphics engine (Jordan: Do not focus too much on this, it is very complicated and not relevant to the problem.
+		// make the graphics engine (Jordan: Do not focus too much on this, it is very complicated and not relevant to the problem.
 		graphics = GraphicsEngine("3D Four Connect", &SCR_WIDTH, &SCR_HEIGHT, 1, true);
 
-		//add all the models that are going to be used immediatley
+		// add all the models that are going to be used immediatley
 		graphics.addModel(BoardModelPath);
 		graphics.addModel(RedModelPath);
 		graphics.addModel(BlueModelPath);
 		graphics.addModel(OutlineModelPath);
 
-		//set skybox
+		// set skybox
 		graphics.setSkybox(cloudySkybox);
 
-		//set light
+		// set light
 		graphics.setLight(glm::vec3(100, 150, 100), glm::vec3(1));
 		graphics.getLight()->visible = false;
 
-		//make the board and game manager
+		// make the board and game manager
 		gameManager = GameManager(graphics, graphics.camera, glm::vec3(0, 0, 0));
 
-		//set pointers
+		// set pointers
 		gM = &gameManager;
 
-		//set camera starting pos
+		// set camera starting pos
 		graphics.camera.setPos(glm::vec3(0.0f, 7 * 1.5f, 40.0f));
 
-		//set callbacks
+		// set callbacks
 		glfwSetCursorPosCallback(graphics.window, mouse_callback_custom);
 		glfwSetMouseButtonCallback(graphics.window, mouse_button_callback_custom);
 
-		//add text
-		//graphics.textManager.addText("This is sample text", "test", 15.0f, 15.0f, 1.0f, glm::vec3(0.5, 0.8f, 0.2f));
+		// add text
+		// graphics.textManager.addText("This is sample text", "test", 15.0f, 15.0f, 1.0f, glm::vec3(0.5, 0.8f, 0.2f));
 
-		//add test piece
-		//gameManager.board.addPiece(Piece::Color::BLUE, 0, 3, 0);
-		//gameManager.board.addPiece(Piece::Color::RED, 1, 3, 0);
+		// add test piece
+		// gameManager.board.addPiece(Piece::Color::BLUE, 0, 3, 0);
+		// gameManager.board.addPiece(Piece::Color::RED, 1, 3, 0);
 
 		enableFPSCounter = true;
 
@@ -159,25 +163,24 @@ public:
 	}
 
 	int run() {
-		//start timer
+		// start timer
 		std::chrono::system_clock::time_point now = std::chrono::system_clock::now();
 
-		//input
+		// input
 
-		//update the board and game
-
+		// update the board and game (handles input too)
 		gameManager.update();
 
-		//std::cout << graphics.camera.yaw << " " << graphics.camera.pitch << std::endl;
+		// std::cout << graphics.camera.yaw << " " << graphics.camera.pitch << std::endl;
 
-		//render frame
+		// render frame
 		gameState = graphics.renderFrame();
 
-		//end of timer sleep and normalize the clock
+		// end of timer sleep and normalize the clock
 		std::chrono::system_clock::time_point after = std::chrono::system_clock::now();
 		std::chrono::microseconds difference(std::chrono::time_point_cast<std::chrono::microseconds>(after) - std::chrono::time_point_cast<std::chrono::microseconds>(now));
 
-		//count the fps
+		// count the fps
 		int diffCount = difference.count();
 		if (diffCount == 0) {
 			diffCount = 1;
@@ -185,7 +188,7 @@ public:
 
 		int sleepDuration = ((1000000 / fps * 1000) - diffCount) / 1000000;
 
-		//output fps
+		// output fps
 		fpsCount += 1;
 		fpsCounter += 1000000 / diffCount;
 
@@ -201,14 +204,14 @@ public:
 			sleepDuration = 0;
 		}
 
-		//std::cout << sleepDuration << std::endl;
+		// std::cout << sleepDuration << std::endl;
 		Sleep(sleepDuration);
 
 		return gameState;
 	}
 };
 
-//clicking
+// clicking
 void mouse_button_callback_custom(GLFWwindow* window, int button, int action, int mods)
 {
 	if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
@@ -220,7 +223,7 @@ void mouse_button_callback_custom(GLFWwindow* window, int button, int action, in
 	}
 }
 
-//mouse movement
+// mouse movement
 void mouse_callback_custom(GLFWwindow* window, double xpos, double ypos)
 {
 	(*gM).mouseUpdate(xpos, ypos);

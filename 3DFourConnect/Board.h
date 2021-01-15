@@ -4,8 +4,8 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <img/stb_image.h>
-//idk but manually importing fixes the problem
-//#include <img/ImageLoader.h>
+// idk but manually importing fixes the problem
+// #include <img/ImageLoader.h>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -17,15 +17,15 @@
 #include <iostream>
 #include <vector>
 
-//graphics tools
+// graphics tools
 #include "GraphicsEngine.h"
 #include "Camera.h"
 #include "Model.h"
 
-//other pieces
+// other pieces
 #include "Piece.h"
 
-//Networking
+// Networking
 #include "Tools.h"
 
 class Board {
@@ -43,7 +43,7 @@ public:
 
 		asset = new Asset(nullptr, glm::vec3(0), glm::vec3(0), glm::vec3(1));
 
-		//do initial setup for board
+		// do initial setup for board
 		clearBoard();
 	}
 
@@ -53,21 +53,21 @@ public:
 		asset = new Asset((*(this->graphics)).getModel("3dfourconnectFIXED.obj"), pos, glm::vec3(0), glm::vec3(1));
 		(*(this->graphics)).addAsset(asset);
 		
-		//do initial setup for board
+		// do initial setup for board
 		clearBoard();
 	}
 
-	//range (0-3) inclusive (integers)
+	// range (0-3) inclusive (integers)
 	bool addPiece(Piece::Color color, int x, int y, int z) {
-		//check if another piece is already there
+		// check if another piece is already there
 		if (data[x][y][z].type != Piece::Color::NONE) {
 			return false;
 		}
 
-		//remove old asset
+		// remove old asset
 		if (graphics != nullptr)
 		graphics->removeAsset(data[x][y][z].asset);
-		//since the origin of the board is at the bottom center, we just find the bottom left corner and work relatively.
+		// since the origin of the board is at the bottom center, we just find the bottom left corner and work relatively.
 		glm::vec3 pos = getPiecePosFromCoord(x,y,z);
 		data[x][y][z] = Piece(graphics, color, pos);
 
@@ -85,7 +85,7 @@ public:
 					if (graphics != nullptr) {
 						graphics->removeAsset(data[x][y][z].asset);
 					}
-					//since the origin of the board is at the bottom center, we just find the bottom left corner and work relatively.
+					// since the origin of the board is at the bottom center, we just find the bottom left corner and work relatively.
 					glm::vec3 pos = getPiecePosFromCoord(x, y, z);
 					data[x][y][z] = Piece(graphics, Piece::Color::NONE, pos);
 				}
@@ -111,16 +111,16 @@ public:
 		return false;
 	}
 
-	//utility
-	//since the model's origin is at the bottom center, we just get the conversion rate of the y axis and multiply it by 1.5 since there are 4 plates
+	// utility
+	// since the model's origin is at the bottom center, we just get the conversion rate of the y axis and multiply it by 1.5 since there are 4 plates
 	glm::vec3 getCenter() {
-		//return (*model).position + glm::vec3(0, piecePosScalar.y * 1.5, 0);
+		// return (*model).position + glm::vec3(0, piecePosScalar.y * 1.5, 0);
 		return glm::vec3(0, piecePosScalar.y * 1.5, 0);
 	}
 
-	//sets all the board positons and current to whatever the datapacked says
+	// sets all the board positons and current to whatever the datapacked says
 	void setBoardToData(DataPacket *datapacket) {
-		//std::cout << "set board to data" << std::endl;
+		// std::cout << "set board to data" << std::endl;
 		clearBoard();
 		for (int x = 0; x < 4; x++) {
 			for (int y = 0; y < 4; y++) {

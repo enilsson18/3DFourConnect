@@ -29,7 +29,7 @@
 
 #include <signal.h>
 
-//all vars and static methods are defined in the Tools.h fill
+// all vars and static methods are defined in the Tools.h fill
 
 void LocalUserInput_Init()
 {
@@ -59,15 +59,15 @@ void LocalUserInput_Init()
 void LocalUserInput_Kill()
 {
 	// Does not work.  We won't clean up, we'll just nuke the process.
-	//	g_bQuit = true;
-	//	_close( fileno( stdin ) );
-	//
-	//	if ( s_pThreadUserInput )
-	//	{
-	//		s_pThreadUserInput->join();
-	//		delete s_pThreadUserInput;
-	//		s_pThreadUserInput = nullptr;
-	//	}
+	// 	g_bQuit = true;
+	// 	_close( fileno( stdin ) );
+	// 
+	// 	if ( s_pThreadUserInput )
+	// 	{
+	// 		s_pThreadUserInput->join();
+	// 		delete s_pThreadUserInput;
+	// 		s_pThreadUserInput = nullptr;
+	// 	}
 }
 
 // You really gotta wonder what kind of pedantic garbage was

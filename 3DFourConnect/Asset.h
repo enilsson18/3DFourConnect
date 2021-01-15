@@ -4,8 +4,8 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <img/stb_image.h>
-//idk but manually importing fixes the problem
-//#include <img/ImageLoader.h>
+// idk but manually importing fixes the problem
+// #include <img/ImageLoader.h>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -17,12 +17,12 @@
 #include <iostream>
 #include <vector>
 
-//graphics tools
+// graphics tools
 #include "Camera.h"
 #include "Model.h"
 #include "Mesh.h"
 
-//the physical instance of the model with transforms
+// the physical instance of the model with transforms
 class Asset {
 public:
 	Model* model;
@@ -33,11 +33,11 @@ public:
 	glm::vec3 rotation;
 	glm::vec3 scale;
 
-	//Note: override disables lighting effects for the object
+	// Note: override disables lighting effects for the object
 	bool overrideColorEnabled;
 	glm::vec3 overrideColor;
 
-	//effects
+	// effects
 	struct Effect {
 		string name;
 		bool enabled = false;
@@ -45,14 +45,14 @@ public:
 		glm::vec3 color;
 		float colorStrength = 0.5f;
 
-		//speed in animation
+		// speed in animation
 		int speed = 20;
 
-		//progress in animation of effect
+		// progress in animation of effect
 		int frame = 0;
 	};
 
-	//make white gradient
+	// make white gradient
 	Effect gradient;
 
 	Asset() {
@@ -132,13 +132,13 @@ public:
 		this->scale = scale;
 	}
 
-	//Note: override disables lighting effects for the object
+	// Note: override disables lighting effects for the object
 	void setOverrideColor(glm::vec3 color) {
 		overrideColor = color;
 		overrideColorEnabled = true;
 	}
 
-	//effect stuff
+	// effect stuff
 	void enableGradientEffect() {
 		gradient.enabled = true;
 	}
@@ -158,7 +158,7 @@ public:
 		}
 	}
 
-	//returns output color of the gradient effect
+	// returns output color of the gradient effect
 	void updateGradientEffect(Shader &shader) {
 		gradient.frame += gradient.speed;
 
@@ -167,11 +167,11 @@ public:
 			gradient.frame += gradient.speed;
 		}
 
-		//width of 100 rgb values
+		// width of 100 rgb values
 		float width = 200;
-		//scale the output color
+		// scale the output color
 		glm::vec3 output = (gradient.color - float(((255 - width) / 2) / 255)) * float((width/255) * (float(gradient.frame) / 1000)) + float(((255 - width) / 2) / 255);
-		//std::cout << to_string(output) << std::endl;
+		// std::cout << to_string(output) << std::endl;
 
 		shader.use();
 		shader.setVec3("effectColor", output);

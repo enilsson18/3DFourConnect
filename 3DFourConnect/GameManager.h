@@ -18,25 +18,26 @@
 
 #include "TextManager.h"
 
-//graphics tools
+// graphics tools
 #include "GraphicsEngine.h"
 #include "Camera.h"
 #include "Model.h"
 #include "Board.h"
 #include "Piece.h"
 
-//prototypes
+// prototypes
 
-//manages the graphics, controls, and game data of 3d Four Connect
+// manages the graphics, controls, and game data of 3d Four Connect
 class GameManager {
 public:
-	//callbacks
+	// callbacks
 	void(*winCallback)(Piece::Color) = nullptr;
 	void(*placePieceCallback)(Piece::Color, glm::vec3) = nullptr;
+	void(*clearBoardCallback)() = nullptr;
 	void(*outlinePieceMoveCallback) (bool, glm::vec3) = nullptr;
 
-	//options
-	//will prevent placing a piece (1 is red, 2 is blue) unless the int is set to zero in which both moves can be done.
+	// options
+	// will prevent placing a piece (1 is red, 2 is blue) unless the int is set to zero in which both moves can be done.
 	int placeOnlyOnTurn;
 
 	GraphicsEngine *graphics = nullptr;
@@ -44,10 +45,15 @@ public:
 
 	Board board;
 
-	//all score texts will use the tagformat "score#"
+	// all score texts will use the tagformat "score#"
 	int score1;
 	int score2;
 
+	// flags
+	// the pause after somebody wins where everyone looks at the board
+	bool winPause;
+
+	// mouse stuff
 	bool rightClickStatus;
 	bool leftClickStatus;
 	glm::vec2 mousePos;
@@ -57,7 +63,7 @@ public:
 	Piece::Color currentTurn;
 	glm::vec3 mouseRay;
 
-	//-1 means not selecting anything
+	// -1 means not selecting anything
 	glm::vec3 selectedPiece;
 
 	enum Stage { TESTING, SETUP, PLAY, DATA, END };
@@ -66,14 +72,14 @@ public:
 	Piece previewPiece;
 	Piece outlinePiece;
 
-	//for multiplayer only
+	// for multiplayer only
 	Piece opponentPiece;
 
-	//testing
+	// testing
 	Piece testPiece;
 
-	//neutral game manager that is meant to mainly handle sheer events and status of the board rather than graphics and controls
-	//optimal for a server storing data
+	// neutral game manager that is meant to mainly handle sheer events and status of the board rather than graphics and controls
+	// optimal for a server storing data
 	GameManager() {
 		board = Board();
 
@@ -92,13 +98,15 @@ public:
 		this->graphics = &graphics;
 		this->camera = &camera;
 
-		//default values init
+		// default values init
 		camFollowDistance = 40.0f;
 
 		placeOnlyOnTurn = 0;
 
 		score1 = 0;
 		score2 = 0;
+
+		winPause = false;
 
 		rightClickStatus = false;
 		leftClickStatus = false;
@@ -107,32 +115,32 @@ public:
 
 		selectedPiece = glm::vec3(-1);
 
-		//construct the game setup
+		// construct the game setup
 		board = Board(graphics, pos);
 
 		currentTurn = Piece::Color::RED;
 
 		stage = Stage::PLAY;
 
-		//play setup
+		// play setup
 		if (stage == Stage::PLAY) {
-			//setup text
+			// setup text
 			this->graphics->addText("Player 1: 0", "score1", 1, 95, 1.0f, glm::vec3(0.75,0.1,0.1));
 			this->graphics->addText("Player 2: 0", "score2", 1, 90, 1.0f, glm::vec3(0.1,0.1,0.75));
 		}
 
-		//testing setup
+		// testing setup
 		if (stage == Stage::TESTING) {
 			testPiece = Piece(&graphics, Piece::RED, glm::vec3(0));
 		}
 	}
 
 	void update() {
-		//std::cout << (*graphics).scene.size() << std::endl;
+		// std::cout << (*graphics).scene.size() << std::endl;
 
-		//non-graphical data based game
+		// non-graphical data based game
 		if (stage == Stage::DATA) {
-			//check win case
+			// check win case
 			Piece::Color win = checkWin();
 			if (win != Piece::Color::NONE) {
 				string text;
@@ -150,13 +158,13 @@ public:
 
 					score2 += 1;
 				}
-				//nobody wins
+				// nobody wins
 				else if (board.fullBoard()) {
 					cout << "NOBODY WINS" << endl;
 					text = "Nobody Wins!";
 				}
 
-				//graphics->textManager.addText(text, 25.0f, 25.0f, 1.0f, glm::vec3(0.5, 0.8f, 0.2f));
+				// graphics->textManager.addText(text, 25.0f, 25.0f, 1.0f, glm::vec3(0.5, 0.8f, 0.2f));
 				if (winCallback != nullptr) {
 					winCallback(win);
 				}
@@ -165,40 +173,50 @@ public:
 			}
 		}
 
-		//main game info
+		// main game info
 		if (stage == Stage::PLAY) {
-			//basically if not multiplayer online then keep the preview color the same
+			// basically if not multiplayer online then keep the preview color the same
 			if (placeOnlyOnTurn == 0) {
-				//if the preview piece is not set then make it
+				// if the preview piece is not set then make it
 				if (previewPiece.type != currentTurn) {
 					graphics->removeAsset(previewPiece.asset);
 					previewPiece = Piece(graphics, currentTurn, glm::vec3(0));
 				}
 
-				//if the outline piece is not set then make it
+				// if the outline piece is not set then make it
 				if (outlinePiece.type != currentTurn) {
 					graphics->removeAsset(outlinePiece.asset);
 					outlinePiece = Piece(graphics, currentTurn, glm::vec3(0));
 					outlinePiece.asset->gradient.enabled = true;
 					outlinePiece.asset->visible = false;
 				}
+
+				// change the strength of gradient on the outline piece if the win pause is active
+				if (winPause) {
+					outlinePiece.asset->gradient.colorStrength = 1.0f;
+					outlinePiece.asset->setOverrideColor(glm::vec3(1));
+				}
+				else {
+					outlinePiece.asset->gradient.colorStrength = 0.5f;
+					outlinePiece.asset->overrideColorEnabled = false;
+				}
 			}
 			else {
-				//set if not set
+				// set if not set
 				if (previewPiece.type != placeOnlyOnTurn) {
 					graphics->removeAsset(previewPiece.asset);
 					previewPiece = Piece(graphics, Piece::Color(placeOnlyOnTurn), glm::vec3(0));
 				}
 
-				//outline piece
-				if (outlinePiece.type != placeOnlyOnTurn) {
+				// outline piece
+				if (outlinePiece.type != placeOnlyOnTurn && !winPause) {
 					graphics->removeAsset(outlinePiece.asset);
 					outlinePiece = Piece(graphics, Piece::Color(placeOnlyOnTurn), glm::vec3(0));
 					outlinePiece.asset->gradient.enabled = true;
 					outlinePiece.asset->visible = false;
 				}
 
-				//setup opponents marker if they are not setup already
+				// setup opponents marker if they are not setup already
 				if (opponentPiece.asset == nullptr) {
 					graphics->removeAsset(opponentPiece.asset);
 					opponentPiece = Piece(graphics, Piece::Color(((placeOnlyOnTurn + 0) % 2) + 1), glm::vec3(0));
@@ -206,8 +224,8 @@ public:
 					opponentPiece.asset->visible = false;
 				}
 
-				//change the strength of gradient on the outline piece if it is not their turn
-				if (currentTurn != placeOnlyOnTurn) {
+				// change the strength of gradient on the outline piece if it is not their turn
+				if (currentTurn != placeOnlyOnTurn || winPause) {
 					outlinePiece.asset->gradient.colorStrength = 1.0f;
 					outlinePiece.asset->setOverrideColor(glm::vec3(1));
 				}
@@ -217,42 +235,41 @@ public:
 				}
 			}
 
-			//check key input
+			// check key input
 			checkGameInput();
 
-			//make cam look at target and stay locked at a set distance
+			// make cam look at target and stay locked at a set distance
 			(*camera).setPos(board.getCenter() + normalize((*camera).pos - board.getCenter()) * camFollowDistance);
 			(*camera).lookAtTarget(board.getCenter());
 
-			//update vectors
+			// update vectors
 			(*camera).updateCameraVectors();
 
-			//update mouse ray
+			// update mouse ray
 			updateMouseRay();
 
-			//The selected pieces are found in the mouseUpdate Callback
-
-			//store the current state of outline piece so we don't send status of it every single frame
+			// store the current state of outline piece so we don't send status of it every single frame to server
 			bool tempBool = outlinePiece.asset->visible;
 			glm::vec3 tempVec3 = outlinePiece.asset->position;
 
-			//handle selecting pieces
-			//if a piece is selected and it has a type NONE
-			//if ((currentTurn == placeOnlyOnTurn || placeOnlyOnTurn == 0) && selectedPiece != glm::vec3(-1) && board.data[(int)selectedPiece.x][(int)selectedPiece.y][(int)selectedPiece.z].type == Piece::Color::NONE) {
+			// SELECT PIECES
+
+			// if a piece is selected and it has a type NONE
+			// if ((currentTurn == placeOnlyOnTurn || placeOnlyOnTurn == 0) && selectedPiece != glm::vec3(-1) && board.data[(int)selectedPiece.x][(int)selectedPiece.y][(int)selectedPiece.z].type == Piece::Color::NONE) {
 			if (selectedPiece != glm::vec3(-1) && board.data[(int)selectedPiece.x][(int)selectedPiece.y][(int)selectedPiece.z].type == Piece::Color::NONE) {
-				//set outline piece location and visibility
+				// set outline piece location and visibility
 				outlinePiece.asset->setPosition(board.getPiecePosFromCoord((int)selectedPiece.x, (int)selectedPiece.y, (int)selectedPiece.z));
 				outlinePiece.asset->visible = true;
 
-				//check for right click or left click events to set piece
-				if (leftClickStatus && (currentTurn == placeOnlyOnTurn || placeOnlyOnTurn == 0)) {
+				// check for right click or left click events to set piece (does not activate when win pause activates).
+				if (!winPause && leftClickStatus && (currentTurn == placeOnlyOnTurn || placeOnlyOnTurn == 0)) {
 					board.addPiece(currentTurn, (int)selectedPiece.x, (int)selectedPiece.y, (int)selectedPiece.z);
 					switchTurn();
 
-					//std::cout << "placed piece" << std::endl;
-					//callback
+					// std::cout << "placed piece" << std::endl;
+					// callback
 					if (placePieceCallback != nullptr) {
-						//std::cout << "called callback" << std::endl;
+						// std::cout << "called callback" << std::endl;
 						placePieceCallback(board.data[(int)selectedPiece.x][(int)selectedPiece.y][(int)selectedPiece.z].type, selectedPiece);
 					}
 				}
@@ -261,19 +278,19 @@ public:
 				outlinePiece.asset->visible = false;
 			}
 
-			//check if the outline piece changed at all and if so, then activate callback
+			// check if the outline piece changed at all and if so, then activate callback
 			if (tempBool != outlinePiece.asset->visible || tempVec3 != outlinePiece.asset->position) {
 				if (placePieceCallback != nullptr) {
 					outlinePieceMoveCallback(outlinePiece.asset->visible, outlinePiece.asset->position);
 				}
 			}
 
-			//bind and rotate preview piece
+			// bind and rotate preview piece
 			bindPreviewPiece();
 
-			//check win case
+			// check win case
 			Piece::Color win = checkWin();
-			if (win != Piece::Color::NONE){
+			if (win != Piece::Color::NONE && !winPause){
 				string text;
 
 				cout << endl;
@@ -291,21 +308,21 @@ public:
 					score2 += 1;
 					graphics->setText("score2", "Player 2: " + to_string(score2));
 				}
-				//nobody wins
+				// nobody wins
 				else if (board.fullBoard()) {
 					cout << "NOBODY WINS" << endl;
 					text = "Nobody Wins!";
 				}
 
+				text = text + " (Press Enter to Continue)";
+				graphics->textManager.addText(text, "win_msg", 26.0f, 70.0f, 1.0f, glm::vec3(0));
+
+				winPause = true;
+				
 				if (winCallback != nullptr) {
-					//std::cout << "callback call" << std::endl;
+					// std::cout << "callback call" << std::endl;
 					winCallback(win);
 				}
-				
-				board.clearBoard();
-				//graphics->textManager.addText(text, 25.0f, 25.0f, 1.0f, glm::vec3(0.5, 0.8f, 0.2f));
-
-				
 			}
 		}
 
@@ -315,7 +332,7 @@ public:
 			testPiece.asset->setPosition((*camera).pos + mouseRay * 20.0f);
 		}
 
-		//reset mouse buttons
+		// reset mouse buttons
 		rightClickStatus = false;
 		leftClickStatus = false;
 	}
@@ -324,33 +341,49 @@ public:
 		float accel = 0.02;
 		(*camera).deceleration = 0.01;
 
-		//camera controls
-		//up
+		// camera controls
+		// up
 		if (glfwGetKey((*graphics).window, GLFW_KEY_UP) | glfwGetKey((*graphics).window, GLFW_KEY_W) == GLFW_PRESS) {
 			(*camera).vel += accel * (*camera).Up;
 		}
-		//down
+		// down
 		if (glfwGetKey((*graphics).window, GLFW_KEY_DOWN) | glfwGetKey((*graphics).window, GLFW_KEY_S) == GLFW_PRESS) {
 			(*camera).vel -= accel * (*camera).Up;
 		}
-		//right
+		// right
 		if (glfwGetKey((*graphics).window, GLFW_KEY_RIGHT) | glfwGetKey((*graphics).window, GLFW_KEY_D) == GLFW_PRESS) {
 			(*camera).vel += accel * (*camera).Right;
 		}
-		//left
+		// left
 		if (glfwGetKey((*graphics).window, GLFW_KEY_LEFT) | glfwGetKey((*graphics).window, GLFW_KEY_A) == GLFW_PRESS) {
 			(*camera).vel -= accel * (*camera).Right;
 		}
 
-		//update physics
+		// move on to next round if the game is in the win-pause stage
+		if (winPause) {
+			if (glfwGetKey((*graphics).window, GLFW_KEY_ENTER) | glfwGetKey((*graphics).window, GLFW_KEY_ENTER) == GLFW_PRESS) {
+				winPause = false;
+
+				// remove the banner
+				graphics->textManager.removeText("win_msg");
+
+				board.clearBoard();
+
+				if (clearBoardCallback != nullptr) {
+					clearBoardCallback();
+				}
+			}
+		}
+
+		// update physics
 		(*camera).updatePhysics();
 	}
 
-	//check if somebody won
+	// check if somebody won
 	Piece::Color checkWin() {
-		//HORIZONTAL OR VERTICAL
-		//PARALLEL TO X-AXIS
-		//RED
+		// HORIZONTAL OR VERTICAL
+		// PARALLEL TO X-AXIS
+		// RED
 		for (int y = 0; y < 4; y++) {
 			for (int z = 0; z < 4; z++) {
 				for (int x = 0; x < 4; x++) {
@@ -363,7 +396,7 @@ public:
 				}
 			}
 		}
-		//BLUE
+		// BLUE
 		for (int y = 0; y < 4; y++) {
 			for (int z = 0; z < 4; z++) {
 				for (int x = 0; x < 4; x++) {
@@ -377,8 +410,8 @@ public:
 			}
 		}
 
-		//PARALLEL TO Y-AXIS
-		//RED
+		// PARALLEL TO Y-AXIS
+		// RED
 		for (int x = 0; x < 4; x++) {
 			for (int z = 0; z < 4; z++) {
 				for (int y = 0; y < 4; y++) {
@@ -391,7 +424,7 @@ public:
 				}
 			}
 		}
-		//BLUE
+		// BLUE
 		for (int x = 0; x < 4; x++) {
 			for (int z = 0; z < 4; z++) {
 				for (int y = 0; y < 4; y++) {
@@ -405,8 +438,8 @@ public:
 			}
 		}
 
-		//PARALLEL TO Z-AXIS
-		//RED
+		// PARALLEL TO Z-AXIS
+		// RED
 		for (int y = 0; y < 4; y++) {
 			for (int x = 0; x < 4; x++) {
 				for (int z = 0; z < 4; z++) {
@@ -419,7 +452,7 @@ public:
 				}
 			}
 		}
-		//BLUE
+		// BLUE
 		for (int y = 0; y < 4; y++) {
 			for (int x = 0; x < 4; x++) {
 				for (int z = 0; z < 4; z++) {
@@ -433,9 +466,9 @@ public:
 			}
 		}
 
-		//DIAGONAL
-		//X-FACE
-		//RED
+		// DIAGONAL
+		// X-FACE
+		// RED
 		for (int z = 0; z < 4; z++) {
 			for (int i = 0; i < 4; i++) {
 				if (board.data[i][i][z].type != Piece::RED) {
@@ -456,7 +489,7 @@ public:
 				}
 			}
 		}
-		//BLUE
+		// BLUE
 		for (int z = 0; z < 4; z++) {
 			for (int i = 0; i < 4; i++) {
 				if (board.data[i][i][z].type != Piece::BLUE) {
@@ -478,8 +511,8 @@ public:
 			}
 		}
 
-		//Y-FACE
-		//RED
+		// Y-FACE
+		// RED
 		for (int y = 0; y < 4; y++) {
 			for (int i = 0; i < 4; i++) {
 				if (board.data[i][y][i].type != Piece::RED) {
@@ -500,7 +533,7 @@ public:
 				}
 			}
 		}
-		//BLUE
+		// BLUE
 		for (int y = 0; y < 4; y++) {
 			for (int i = 0; i < 4; i++) {
 				if (board.data[i][y][i].type != Piece::BLUE) {
@@ -522,8 +555,8 @@ public:
 			}
 		}
 
-		//Z-FACE
-		//RED
+		// Z-FACE
+		// RED
 		for (int x = 0; x < 4; x++) {
 			for (int i = 0; i < 4; i++) {
 				if (board.data[x][i][i].type != Piece::RED) {
@@ -544,7 +577,7 @@ public:
 				}
 			}
 		}
-		//BLUE
+		// BLUE
 		for (int x = 0; x < 4; x++) {
 			for (int i = 0; i < 4; i++) {
 				if (board.data[x][i][i].type != Piece::BLUE) {
@@ -566,8 +599,8 @@ public:
 			}
 		}
 
-		//DIAGONAL X DIAGONAL
-		//RED
+		// DIAGONAL X DIAGONAL
+		// RED
 		for (int i = 0; i < 4; i++) {
 			if (board.data[i][i][i].type != Piece::RED) {
 				break;
@@ -600,7 +633,7 @@ public:
 				return Piece::Color::RED;
 			}
 		}
-		//BLUE
+		// BLUE
 		for (int i = 0; i < 4; i++) {
 			if (board.data[i][i][i].type != Piece::BLUE) {
 				break;
@@ -668,7 +701,7 @@ public:
 		rightClickStatus = true;
 	}
 
-	//set the opponent piece visibility and pos (pos is board coordinated not world
+	// set the opponent piece visibility and pos (pos is board coordinated not world
 	void setOpponentOutlinePiece(bool visible, glm::vec3 pos) {
 		opponentPiece.asset->visible = visible;
 
@@ -677,17 +710,17 @@ public:
 		}
 	}
 	
-	//returns int positions of where the pieces are if they are selected
+	// returns int positions of where the pieces are if they are selected
 	glm::vec3 checkSelectPiece() {
 		float closestLength = -1;
 		glm::vec3 closestPos = glm::vec3(-1);
 		for (int x = 0; x < 4; x++) {
 			for (int y = 0; y < 4; y++) {
 				for (int z = 0; z < 4; z++) {
-					//if the piece is not filled already and is being intersected by the line get the distance between the line and the piece
+					// if the piece is not filled already and is being intersected by the line get the distance between the line and the piece
 					float length = checkLinePieceIntersection(board.data[x][y][z], mouseRay);
 
-					//if a piece is selected (not -1) then add it if it is either the closest or the first selected piece.
+					// if a piece is selected (not -1) then add it if it is either the closest or the first selected piece.
 					if (length != -1 && (closestLength == -1 || length < closestLength)) {
 						closestLength = length;
 						closestPos = glm::vec3(x, y, z);
@@ -699,8 +732,8 @@ public:
 		return closestPos;
 	}
 
-	//find the distance between the piece targeted and the camera. Then multiply this by the normalized vector of the line from the camera position and compare if they are close enough.
-	//returns the distance
+	// find the distance between the piece targeted and the camera. Then multiply this by the normalized vector of the line from the camera position and compare if they are close enough.
+	// returns the distance
 	float checkLinePieceIntersection(Piece piece, glm::vec3 line) {
 		float dist = glm::length(camera->pos - piece.asset->position);
 		glm::vec3 linePoint = line * dist + camera->pos;
@@ -712,16 +745,16 @@ public:
 		return -1;
 	}
 
-	//update mouse pos
+	// update mouse pos
 	void mouseUpdate(double x, double y) {
 		mousePos = glm::vec2(x, y);
 
 		selectedPiece = checkSelectPiece();
 	}
 
-	//find the vector ray where the mouse is looking
+	// find the vector ray where the mouse is looking
 	void updateMouseRay() {
-		//calculate the vector displacement of the cursor on the screen from the cameras perspective
+		// calculate the vector displacement of the cursor on the screen from the cameras perspective
 		float nearPlaneWidth = (tan((16.0f / 9.0f) * (*camera).fov * (3.1415926535 / 180)) / (*camera).nearPlane) * 2;
 		float nearPlaneHeight = (tan((*camera).fov * (3.1415926535 / 180)) / (*camera).nearPlane) * 2;
 
@@ -729,29 +762,29 @@ public:
 		glm::vec3 xOffset = (*camera).Right * float(mousePos.x * (nearPlaneWidth / *(*graphics).SCR_WIDTH) - (nearPlaneWidth / 2));
 		glm::vec3 yOffset = -(*camera).Up * float(mousePos.y * (nearPlaneHeight / *(*graphics).SCR_HEIGHT) - (nearPlaneHeight / 2));
 
-		//these numbers are scaling values to compensate for the oblong window and the clipping pane distance
+		// these numbers are scaling values to compensate for the oblong window and the clipping pane distance
 		glm::vec3 scaler = glm::vec3((1 / 7.7) / 100, (1 / 2.425) / 100, 1);
 		mouseRay = glm::normalize(dist*scaler.z + xOffset * scaler.x + yOffset * scaler.y);
 
-		//std::cout << float(x / *(*graphics).SCR_WIDTH) << std::endl;
-		//printVector((*camera).pos + mouseRay * 20.0f);
-		//printVector(mouseRay);
-		//printVector((*graphics).getModel(0).position - (*camera).pos);
+		// std::cout << float(x / *(*graphics).SCR_WIDTH) << std::endl;
+		// printVector((*camera).pos + mouseRay * 20.0f);
+		// printVector(mouseRay);
+		// printVector((*graphics).getModel(0).position - (*camera).pos);
 	}
 
 	void bindPreviewPiece() {
-		//update position
+		// update position
 		glm::vec3 displacement = glm::vec3(9.0f, 4.5f, 15.0f);
 
 		previewPiece.asset->setPosition((*camera).pos + displacement.z * (*camera).Front + displacement.x * (*camera).Right + displacement.y * (*camera).Up);
-		//printVector((*camera).pos);
+		// printVector((*camera).pos);
 
-		//update rotation
+		// update rotation
 		glm::vec3 rotationDisplacement = glm::vec3(1.0f, 2.0f, 3.0f);
 		previewPiece.asset->setRotation(previewPiece.asset->rotation + rotationDisplacement);
 	}
 
-	//set callbacks
+	// set callbacks
 	void setWinCallback(void f (Piece::Color)) {
 		winCallback = f;
 	}
@@ -760,12 +793,16 @@ public:
 		placePieceCallback = f;
 	}
 
-	//visible, position
+	void setClearBoardCallback(void f ()) {
+		clearBoardCallback = f;
+	}
+
+	// visible, position
 	void setOutlinePieceMoveCallback(void f(bool, glm::vec3)) {
 		outlinePieceMoveCallback = f;
 	}
 
-	//utility
+	// utility
 	void printVector(glm::vec3 vec) {
 		std::cout << vec.x << " " << vec.y << " " << vec.z << std::endl;
 	}

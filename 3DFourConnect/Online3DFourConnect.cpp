@@ -1,4 +1,4 @@
-//Requires GameNetworkingSockets to compile. See the build link: https://github.com/ValveSoftware/GameNetworkingSockets/blob/master/BUILDING.md
+// Requires GameNetworkingSockets to compile. See the build link: https://github.com/ValveSoftware/GameNetworkingSockets/blob/master/BUILDING.md
 
 #include <assert.h>
 #include <stdio.h>
@@ -29,12 +29,12 @@
 #include "Server.h"
 #include "Client.h"
 
-//Board and game classes
+// Board and game classes
 #include "GameManager.h"
 #include "Board.h"
 #include "Piece.h"
 
-//callback setup
+// callback setup
 void winCallback(Piece::Color color);
 
 Server *Server::s_pCallbackInstance = nullptr;
@@ -51,7 +51,7 @@ void PrintUsageAndExit()
 		"3DFourConnect.exe server [--port PORT]" << std::endl;
 }
 
-//start up options
+// start up options
 int main(int argc, const char *argv[])
 {
 	bool bServer = false;
@@ -60,6 +60,7 @@ int main(int argc, const char *argv[])
 	int nPort = DEFAULT_SERVER_PORT;
 	SteamNetworkingIPAddr addrServer; addrServer.Clear();
 
+	// test exe cmd args
 	for (int i = 1; i < argc; ++i)
 	{
 		if (!bClient && !bServer)
@@ -99,7 +100,7 @@ int main(int argc, const char *argv[])
 		PrintUsageAndExit();
 	}
 
-	//cin arguements if there is nothing in the main method arguements on launch
+	// cin arguements if there is nothing in the main method arguements on launch
 	if (argc == 1) {
 		std::string type = "";
 		std::string additionalInfo = "";
@@ -141,22 +142,23 @@ int main(int argc, const char *argv[])
 		}
 	}
 
+	// if invalid entries for some reason
 	if ((bClient == bServer || (bClient && addrServer.IsIPv6AllZeros())) && bLocal == false)
 		PrintUsageAndExit();
 
-	//get the base path and send it to the game
-	//char basePath[255] = "";
-	//_fullpath(basePath, argv[0], sizeof(basePath));
-	//std::cout << basePath << std::endl;
+	// get the base path and send it to the game
+	// char basePath[255] = "";
+	// _fullpath(basePath, argv[0], sizeof(basePath));
+	// std::cout << basePath << std::endl;
 
 	// Create client and server sockets
 	InitSteamDatagramConnectionSockets();
 	LocalUserInput_Init();
 
-	//decide which game to make
+	// decide which game to make
 	if (bLocal) {
 		Local3DFourConnect game;
-		//game.gameManager.setWinCallback(winCallback);
+		// game.gameManager.setWinCallback(winCallback);
 		while (game.run() == 1) {};
 	}
 	else if (bClient)
@@ -174,10 +176,11 @@ int main(int argc, const char *argv[])
 
 	// Ug, why is there no simple solution for portable, non-blocking console user input?
 	// Just nuke the process
-	//LocalUserInput_Kill();
-	//NukeProcess(0);
+	// LocalUserInput_Kill();
+	// NukeProcess(0);
 }
 
+// test callback
 void winCallback(Piece::Color color) {
 	std::cout << "Win recieved" << std::endl;
 }

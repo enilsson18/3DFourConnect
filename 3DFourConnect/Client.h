@@ -1,3 +1,7 @@
+// Note: I did not write this code 100% myself.
+// This is an adaptation of the GameNetworkingSockets public example 
+// which was originally a simple chat program with clients and a server.
+
 #ifndef CLIENT_H
 #define CLIENT_H
 
@@ -28,8 +32,10 @@
 
 #include "Tools.h"
 
-//prototypes
+// prototypes
+// callbacks
 void placePieceCallback(Piece::Color color, glm::vec3 pos);
+void clearBoardCallback();
 void outlinePieceMoveCallback(bool visible, glm::vec3 pos);
 
 void* clientPtr;
@@ -40,15 +46,17 @@ public:
 	Local3DFourConnect game;
 	int currentTurn;
 
+	// Start and run the Client
 	void Run(const SteamNetworkingIPAddr &serverAddr)
 	{
-		//setup local game stuff
+		// setup local game stuff
 		clientPtr = this;
 
 		game.gameManager.setPiecePlaceCallback(placePieceCallback);
+		game.gameManager.setClearBoardCallback(clearBoardCallback);
 		game.gameManager.setOutlinePieceMoveCallback(outlinePieceMoveCallback);
 
-		//disable fps counter
+		// disable fps counter
 		game.enableFPSCounter = false;
 
 		// Select instance to use.  For now we'll always use the default.
@@ -65,6 +73,9 @@ public:
 			std::cout << "Failed to create connection" << std::endl;
 		}
 
+		std::cout << "Server commands include: '/quit' and '/clear'" << std::endl;
+
+		// main loop
 		while (!g_bQuit && game.run() == 1)
 		{
 			PollIncomingMessages();
@@ -78,26 +89,26 @@ public:
 		m_pInterface->SendMessageToConnection(m_hConnection, data, (uint32)sizeof(*data), k_nSteamNetworkingSend_Reliable, nullptr);
 	}
 
-	//shortcut to just send all relevant info to the server
+	// shortcut to just send all relevant info to the server
 	void SendCurrentDataToServer() {
-		//get the base packet
+		// get the base packet
 		DataPacket data = convertBoardToPacket();
 		data.type = DataPacket::MsgType::GAME_DATA;
 
-		//set scores
+		// set scores
 		data.score1 = game.gameManager.score1;
 		data.score2 = game.gameManager.score2;
 
-		//send turn after the turn has been switched already.
+		// send turn after the turn has been switched already.
 		data.currentTurn = game.gameManager.currentTurn;
 
-		//send to server
+		// send to server
 		SendDataToServer(&data);
 	}
 
-	//game stuff
-	//convert the pieces on the board to data 1's and 2's to represent red and blue respectivley.
-	//returns a datapacket with the int array converted to numbers
+	// game stuff
+	// convert the pieces on the board to data 1's and 2's to represent red and blue respectivley.
+	// returns a datapacket with the int array converted to numbers
 	DataPacket convertBoardToPacket() {
 		DataPacket data;
 		data.type = DataPacket::MsgType::GAME_DATA;
@@ -140,34 +151,39 @@ private:
 				std::cout << "Error checking for messages" << std::endl;
 
 			// Just echo anything we get from the server
-			//we trust anything coming from the server so just set the current board to whatever this is
+			// we trust anything coming from the server so just set the current board to whatever this is
 			DataPacket *data = (DataPacket*)pIncomingMsg->m_pData;
-			//std::cout << "data recieved" << std::endl;
+			// std::cout << "data recieved" << std::endl;
 			switch (data->type) {
-				//connection info
+				// connection info
+				// currently broken for some reason
 				case DataPacket::MsgType::CONNECTION_STATUS: {
-					//std::cout << data->msg.c_str() << std::endl;
+					// std::cout << data->msg.c_str() << std::endl;
 					break;
 				}
-				//a person is moving their outline piece
+				// a person is moving their outline piece
 				case DataPacket::MsgType::GAME_SELECTION: {
 					game.gameManager.setOpponentOutlinePiece(data->selectedVisible, data->selectedPiecePos);
 
 					break;
 				}
-				//attempting to place a piece
+				// attempting to place a piece
 				case DataPacket::MsgType::GAME_DATA: {
-					//board pieces
-					game.gameManager.board.setBoardToData(data);
+					// don't update the data on the board if one player is still in the win-pause menu.
+					if (!game.gameManager.winPause) {
+						// board pieces
+						game.gameManager.board.setBoardToData(data);
 
-					//set current scores
-					game.gameManager.setScores((int)data->score1, (int)data->score2);
+						// set current scores
+						game.gameManager.setScores((int)data->score1, (int)data->score2);
 
-					//set the current turn
-					game.gameManager.setTurnToInt(data->currentTurn);
+						// set the current turn
+						game.gameManager.setTurnToInt(data->currentTurn);
+					}
 
 					break;
 				}
+				// First setup message recieved from server that specifies the clients turn (Color)
 				case DataPacket::MsgType::GAME_SETUP: {
 					game.gameManager.placeOnlyOnTurn = data->assignedTurn;
 
@@ -196,15 +212,12 @@ private:
 				g_bQuit = true;
 				std::cout << "Disconnecting from chat server" << std::endl;
 
-				// Close the connection gracefully.
-				// We use linger mode to ask for any remaining reliable data
-				// to be flushed out.  But remember this is an application
-				// protocol on UDP.  See ShutdownSteamDatagramConnectionSockets
+				// Close the connection
 				m_pInterface->CloseConnection(m_hConnection, 0, "Goodbye", true);
 				break;
 			}
 
-			//reset the game board
+			// reset the game board in case of error
 			if (strcmp(cmd.c_str(), "/clear") == 0) {
 				DataPacket data;
 				data.type = DataPacket::MsgType::GAME_DATA;
@@ -221,8 +234,10 @@ private:
 				SendDataToServer(&data);
 			}
 
+			std::cout << "Server commands include: '/quit' and '/clear'" << std::endl;
+
 			// Anything else, just send it to the server and let them parse it
-			//m_pInterface->SendMessageToConnection(m_hConnection, cmd.c_str(), (uint32)cmd.length(), k_nSteamNetworkingSend_Reliable, nullptr);
+			// m_pInterface->SendMessageToConnection(m_hConnection, cmd.c_str(), (uint32)cmd.length(), k_nSteamNetworkingSend_Reliable, nullptr);
 		}
 	}
 
@@ -298,8 +313,9 @@ private:
 	}
 };
 
+// called when a piece is moved
 void outlinePieceMoveCallback(bool visible, glm::vec3 pos) {
-	//send packet to server
+	// send packet to server
 	Client *client = (Client*)clientPtr;
 
 	DataPacket data;
@@ -310,14 +326,35 @@ void outlinePieceMoveCallback(bool visible, glm::vec3 pos) {
 	client->SendDataToServer(&data);
 }
 
+// called when a piece is placed
 void placePieceCallback(Piece::Color color, glm::vec3 pos) {
-	//send packet to server
+	// send packet to server
 	Client *client = (Client*)clientPtr;
-	//if it is the clients turn
+	// if it is the clients turn
 
 	client->SendCurrentDataToServer();
 
-	//std::cout << "sent message to server of type" << std::endl;
+	// std::cout << "sent message to server of type" << std::endl;
+}
+
+// called when the board is cleared
+void clearBoardCallback() {
+	Client *client = (Client*)clientPtr;
+
+	// get empty board
+	DataPacket data = client->convertBoardToPacket();
+
+	// set packet type
+	data.type = data.GAME_DATA;
+
+	// set scores
+	data.score1 = client->game.gameManager.score1;
+	data.score2 = client->game.gameManager.score2;
+
+	// set turn to neutral so the original turns remain.
+	data.currentTurn = 0;
+
+	client->SendDataToServer(&data);
 }
 
 #endif
