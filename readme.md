@@ -20,8 +20,9 @@ for players to connect to. Once selected, it will request a port for the
 server to be opened on. You must set your router to port forward the port 
 selected to the server host's computer. Client finally is what players 
 select when they wish to connect to a server. They are then prompted for 
-the IP Address of the network the server is being hosted on. Entering this 
-will connect them to the server and once two players join, the game will start.
+the IP Address of the network the server and the port in the format 
+"IP_ADDRESS:PORT". Entering this will connect them to the server and once 
+two players join, the game will start.
 
 GamePlay:
 	Each player is assigned a color when the game starts: Red or Blue. 
